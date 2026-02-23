@@ -10,37 +10,89 @@ def load_game_data() -> dict:
         return json.load(f)
 
 
-def get_starting_room(game_data: dict) -> dict:
-    starting_room_id = game_data.get("starting_room")
+def build_room_map(game_data: dict) -> dict:
     rooms = game_data.get("rooms", [])
+    return {room.get("id"): room for room in rooms if room.get("id")}
 
-    for room in rooms:
-        if room.get("id") == starting_room_id:
-            return room
 
-    # Fallback if JSON is missing something
-    return {
-        "id": "unknown",
-        "name": "Unknown",
-        "description": "The world data is missing a starting room."
-    }
+def print_room(room: dict) -> None:
+    print(f"\n{room.get('name', '')}")
+    print(room.get("description", ""))
+
+    exits = room.get("exits", {})
+    if exits:
+        directions = ", ".join(sorted(exits.keys()))
+        print(f"Exits: {directions}")
+
+
+def parse_command(text: str) -> tuple[str, str | None]:
+    parts = text.strip().lower().split()
+
+    if not parts:
+        return "", None
+
+    verb = parts[0]
+    target = parts[1] if len(parts) > 1 else None
+
+    return verb, target
 
 
 def main() -> None:
     game_data = load_game_data()
-    room = get_starting_room(game_data)
+    rooms = build_room_map(game_data)
 
-    print(room.get("name", ""))
-    print(room.get("description", ""))
+    current_room_id = game_data.get("starting_room")
+
+    if current_room_id not in rooms:
+        print("Error: starting_room is missing or invalid in game.json")
+        return
+
+    print("The Dark Forest")
+    print("Type: look, go <direction>, inventory, quit")
+
+    print_room(rooms[current_room_id])
 
     while True:
-        user_input = input("\n> ").strip()
+        user_input = input("\n> ")
+        verb, target = parse_command(user_input)
 
-        if user_input.lower() in ("quit", "exit"):
+        if verb in ("quit", "exit"):
             print("Goodbye.")
             break
 
-        print(f"You typed: {user_input}")
+        if verb == "":
+            print("Please type a command.")
+            continue
+
+        if verb == "look":
+            print_room(rooms[current_room_id])
+            continue
+
+        if verb == "go":
+            if not target:
+                print("Go where? Example: go north")
+                continue
+
+            exits = rooms[current_room_id].get("exits", {})
+            next_room_id = exits.get(target)
+
+            if not next_room_id:
+                print("You cannot go that way.")
+                continue
+
+            if next_room_id not in rooms:
+                print("Error: exit points to a missing room in game.json")
+                continue
+
+            current_room_id = next_room_id
+            print_room(rooms[current_room_id])
+            continue
+
+        if verb == "inventory":
+            print("Inventory is not implemented yet.")
+            continue
+
+        print("Unknown command. Try: look, go <direction>, inventory, quit")
 
 
 if __name__ == "__main__":

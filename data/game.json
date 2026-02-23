@@ -4,7 +4,14 @@
     {
       "id": "clearing",
       "name": "Forest Clearing",
-      "description": "You wake up in a dark forest clearing. The air is cold and still."
+      "description": "You wake up in a dark forest clearing. The air is cold and still.",
+      "exits": { "north": "trees" }
+    },
+    {
+      "id": "trees",
+      "name": "Thick Trees",
+      "description": "Tall trees crowd around you. It is darker here. The clearing is south.",
+      "exits": { "south": "clearing" }
     }
   ]
 }
