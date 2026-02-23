@@ -1,0 +1,10 @@
+{
+  "starting_room": "clearing",
+  "rooms": [
+    {
+      "id": "clearing",
+      "name": "Forest Clearing",
+      "description": "You wake up in a dark forest clearing. The air is cold and still."
+    }
+  ]
+}
