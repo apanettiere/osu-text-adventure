@@ -5,13 +5,17 @@
       "id": "clearing",
       "name": "Forest Clearing",
       "description": "You wake up in a dark forest clearing. The air is cold and still.",
-      "exits": { "north": "trees" }
+      "exits": { "north": "trees" },
+      "gather": { "wood": 1 },
+      "actions": ["look", "go", "gather", "inventory"]
     },
     {
       "id": "trees",
       "name": "Thick Trees",
       "description": "Tall trees crowd around you. It is darker here. The clearing is south.",
-      "exits": { "south": "clearing" }
+      "exits": { "south": "clearing" },
+      "gather": { "wood": 1 },
+      "actions": ["look", "go", "gather", "inventory"]
     }
   ]
 }

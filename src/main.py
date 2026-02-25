@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from engine.models import Player
 
 
 def load_game_data() -> dict:
@@ -38,6 +39,8 @@ def parse_command(text: str) -> tuple[str, str | None]:
 
 
 def main() -> None:
+    player = Player()
+
     game_data = load_game_data()
     rooms = build_room_map(game_data)
 
@@ -89,7 +92,7 @@ def main() -> None:
             continue
 
         if verb == "inventory":
-            print("Inventory is not implemented yet.")
+            player.show_inventory()
             continue
 
         print("Unknown command. Try: look, go <direction>, inventory, quit")

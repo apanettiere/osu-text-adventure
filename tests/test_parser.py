@@ -1,6 +1,6 @@
 import pytest
 
-from src.main import parse_command
+from engine.parser import parse_command
 
 
 def test_parse_command_empty_string():
