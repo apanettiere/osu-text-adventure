@@ -127,3 +127,7 @@ The game will use:
 * Basic unit tests using pytest
 
 The project will start small and expand over time.
+
+### UI Plan (Pygame Foundation)
+
+The project will use a pygame window as the primary interface. The UI will include a simple main menu and a game screen with a scrolling text log and a command input box. The core game logic will live in the engine, and the UI will display whatever output the engine returns. This will make it easier to add features later such as a map overlay and combat screens without rewriting the game logic.

@@ -10,7 +10,10 @@
         "wood": 1,
         "food": 1
       },
-      "actions": ["look", "go", "gather", "inventory"]
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
     },
     {
       "id": "trees",
@@ -21,7 +24,10 @@
         "wood": 2,
         "stone": 1
       },
-      "actions": ["look", "go", "gather", "inventory"]
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
     }
   ]
 }

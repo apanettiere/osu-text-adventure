@@ -1,6 +1,5 @@
 from engine.models import Player
 from engine.loader import load_game_data, build_room_map
-from engine.parser import parse_command
 
 
 class GameState:
@@ -11,86 +10,100 @@ class GameState:
         self.rooms = build_room_map(self.game_data)
 
         self.current_room_id = self.game_data.get("starting_room")
+        self.is_running = True
 
-    def print_room(self):
-        room = self.rooms.get(self.current_room_id)
+        if self.current_room_id not in self.rooms:
+            self.is_running = False
 
-        print(f"\n{room.get('name', '')}")
-        print(room.get("description", ""))
 
-        exits = room.get("exits", {})
-        if exits:
-            directions = ", ".join(sorted(exits.keys()))
-            print(f"Exits: {directions}")
+    def get_current_room(self):
+        return self.rooms.get(self.current_room_id)
 
-    def run(self):
-        print("The Dark Forest")
-        print("Type: look, go <direction>, gather <resource>, inventory, quit")
+    def describe_current_room(self) -> list[str]:
+        room = self.get_current_room()
 
-        self.print_room()
+        if not room:
+            return ["Error: current room not found."]
 
-        while True:
-            user_input = input("\n> ")
-            verb, target = parse_command(user_input)
+        self.player.discovered_rooms.add(room.id)
 
-            if verb in ("quit", "exit"):
-                print("Goodbye.")
-                break
+        lines = []
+        lines.append(f"\n{room.name}")
+        lines.append(room.description)
 
-            if verb == "":
-                print("Please type a command.")
-                continue
+        if room.exits:
+            directions = ", ".join(sorted(room.exits.keys()))
+            lines.append(f"Exits: {directions}")
 
-            if verb == "look":
-                self.print_room()
-                continue
+        return lines
 
-            if verb == "inventory":
-                self.player.show_inventory()
-                continue
 
-            if verb == "go":
-                if not target:
-                    print("Go where? Example: go north")
-                    continue
+    def process_command(self, verb: str, target: str | None) -> list[str]:
+        if not self.is_running:
+            return []
 
-                room = self.rooms.get(self.current_room_id)
-                exits = room.get("exits", {})
+        if verb in ("quit", "exit"):
+            self.is_running = False
+            return ["Goodbye."]
 
-                next_room_id = exits.get(target)
+        if verb == "":
+            return ["Please type a command."]
 
-                if not next_room_id:
-                    print("You cannot go that way.")
-                    continue
+        if verb == "look":
+            return self.describe_current_room()
 
-                if next_room_id not in self.rooms:
-                    print("Error: exit points to a missing room in game.json")
-                    continue
+        if verb == "inventory":
+            return self.player.get_inventory_lines()
 
-                self.current_room_id = next_room_id
-                self.print_room()
-                continue
-            
-            if verb == "gather":
-                if not target:
-                    print("Gather what? Example: gather wood")
-                    continue
+        if verb == "go":
+            return self.handle_go(target)
 
-                room = self.rooms.get(self.current_room_id)
-                gather_data = room.get("gather", {})
+        if verb == "gather":
+            return self.handle_gather(target)
 
-                amount = gather_data.get(target, 0)
+        return [
+            "Unknown command. Try: look, go <direction>, gather <resource>, inventory, quit"
+        ]
 
-                if amount <= 0:
-                    print("You cannot gather that here.")
-                    continue
 
-                if target not in self.player.inventory:
-                    self.player.inventory[target] = 0
+    def handle_go(self, target: str | None) -> list[str]:
+        if not target:
+            return ["Go where? Example: go north"]
 
-                self.player.inventory[target] += amount
+        room = self.get_current_room()
 
-                print("You gather wood." if target == "wood" else f"You gather {target}.")
-                continue
+        if not room:
+            return ["Error: current room not found."]
 
-            print("Unknown command.")
+        if target not in room.exits:
+            return ["You cannot go that way."]
+
+        next_room_id = room.exits[target]
+
+        if next_room_id not in self.rooms:
+            return ["Error: exit points to a missing room in game.json"]
+
+        self.current_room_id = next_room_id
+        return self.describe_current_room()
+
+
+    def handle_gather(self, target: str | None) -> list[str]:
+        if not target:
+            return ["Gather what? Example: gather wood"]
+
+        room = self.get_current_room()
+
+        if not room:
+            return ["Error: current room not found."]
+
+        amount = room.gather_amount(target)
+
+        if amount <= 0:
+            return ["You cannot gather that here."]
+
+        if target not in self.player.inventory:
+            self.player.inventory[target] = 0
+
+        self.player.inventory[target] += amount
+
+        return [f"You gather {target}."]
