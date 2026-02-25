@@ -51,7 +51,7 @@ def main() -> None:
         return
 
     print("The Dark Forest")
-    print("Type: look, go <direction>, inventory, quit")
+    print("Type: look, go <direction>, gather <resource>, inventory, quit")
 
     print_room(rooms[current_room_id])
 
@@ -95,7 +95,28 @@ def main() -> None:
             player.show_inventory()
             continue
 
-        print("Unknown command. Try: look, go <direction>, inventory, quit")
+        if verb == "gather":
+            if not target:
+                print("Gather what? Example: gather wood")
+                continue
+
+            room = rooms[current_room_id]
+            gather_data = room.get("gather", {})
+
+            amount = gather_data.get(target, 0)
+
+            if amount <= 0:
+                print("You cannot gather that here.")
+                continue
+
+            if target not in player.inventory:
+                player.inventory[target] = 0
+
+            player.inventory[target] += amount
+            print("You gather wood." if target == "wood" else f"You gather {target}.")
+            continue
+
+        print("Unknown command. Try: look, go <direction>, gather <resource>, inventory, quit")
 
 
 if __name__ == "__main__":

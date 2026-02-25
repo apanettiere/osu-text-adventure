@@ -25,7 +25,7 @@ class GameState:
 
     def run(self):
         print("The Dark Forest")
-        print("Type: look, go <direction>, inventory, quit")
+        print("Type: look, go <direction>, gather <resource>, inventory, quit")
 
         self.print_room()
 
@@ -69,6 +69,28 @@ class GameState:
 
                 self.current_room_id = next_room_id
                 self.print_room()
+                continue
+            
+            if verb == "gather":
+                if not target:
+                    print("Gather what? Example: gather wood")
+                    continue
+
+                room = self.rooms.get(self.current_room_id)
+                gather_data = room.get("gather", {})
+
+                amount = gather_data.get(target, 0)
+
+                if amount <= 0:
+                    print("You cannot gather that here.")
+                    continue
+
+                if target not in self.player.inventory:
+                    self.player.inventory[target] = 0
+
+                self.player.inventory[target] += amount
+
+                print("You gather wood." if target == "wood" else f"You gather {target}.")
                 continue
 
             print("Unknown command.")

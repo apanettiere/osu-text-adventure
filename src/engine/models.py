@@ -8,5 +8,13 @@ class Player:
 
     def show_inventory(self) -> None:
         print("\nInventory:")
+
+        has_items = False
+
         for item, amount in self.inventory.items():
-            print(f"{item}: {amount}")
+            if amount > 0:
+                print(f"{item}: {amount}")
+                has_items = True
+
+        if not has_items:
+            print("Empty")
