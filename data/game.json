@@ -4,8 +4,13 @@
     {
       "id": "clearing",
       "name": "Forest Clearing",
-      "description": "You wake up in a dark forest clearing. The air is cold and still.",
-      "exits": { "north": "trees" },
+      "description": "Moonlight spills into a small clearing. The trees press in close, and the air smells like damp earth.",
+      "exits": {
+        "north": "shadow_trees",
+        "south": "soggy_path",
+        "east": "stone_foothills",
+        "west": "fallen_pines"
+      },
       "gather": {
         "wood": 1,
         "food": 1
@@ -15,16 +20,232 @@
       "encounters": [],
       "loot": {}
     },
+
     {
-      "id": "trees",
-      "name": "Thick Trees",
-      "description": "Tall trees crowd around you. It is darker here. The clearing is south.",
-      "exits": { "south": "clearing" },
+      "id": "shadow_trees",
+      "name": "Shadow Trees",
+      "description": "Tall trunks blot out the sky. Every step snaps a twig too loud. The clearing is south.",
+      "exits": {
+        "south": "clearing",
+        "north": "bramble_wall"
+      },
       "gather": {
         "wood": 2,
         "stone": 1
       },
       "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "soggy_path",
+      "name": "Soggy Path",
+      "description": "Mud clings to your boots. Somewhere ahead, water roars like it never sleeps. The clearing is north.",
+      "exits": {
+        "north": "clearing",
+        "south": "rushing_river"
+      },
+      "gather": {
+        "food": 1
+      },
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "stone_foothills",
+      "name": "Stone Foothills",
+      "description": "Loose rock slides underfoot. The forest thins, replaced by cold stone and a rising wind. The clearing is west.",
+      "exits": {
+        "west": "clearing",
+        "east": "black_cliffline"
+      },
+      "gather": {
+        "stone": 2
+      },
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "fallen_pines",
+      "name": "Fallen Pines",
+      "description": "Old pines lie snapped and piled like bones. The clearing is east.",
+      "exits": {
+        "east": "clearing",
+        "west": "deep_woods"
+      },
+      "gather": {
+        "wood": 2
+      },
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "deep_woods",
+      "name": "Deep Woods",
+      "description": "The forest grows quieter here. Even the insects seem to hold their breath. Fallen Pines are east.",
+      "exits": {
+        "east": "fallen_pines",
+        "west": "fog_hollow"
+      },
+      "gather": {
+        "wood": 3,
+        "food": 1
+      },
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "fog_hollow",
+      "name": "Fog Hollow",
+      "description": "A low hollow filled with drifting fog. You can’t see your feet clearly. Deep Woods are east.",
+      "exits": {
+        "east": "deep_woods",
+        "west": "sinkhole_edge"
+      },
+      "gather": {
+        "food": 1
+      },
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "sinkhole_edge",
+      "name": "Sinkhole Edge",
+      "description": "The ground collapses into a black sinkhole. Cold air rises from below. Fog Hollow is east.",
+      "exits": {
+        "east": "fog_hollow"
+      },
+      "gather": {},
+      "actions": ["look", "go", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "bramble_wall",
+      "name": "Bramble Wall",
+      "description": "A wall of brambles and thorned vines blocks the way. You’d get shredded without something to cut through.",
+      "exits": {
+        "south": "shadow_trees",
+        "north": "old_ruins"
+      },
+      "gather": {},
+      "actions": ["look", "go", "inventory"],
+      "requires": [
+        {
+          "type": "item",
+          "item": "machete",
+          "amount": 1,
+          "message": "The brambles tear at you. You need a machete to cut through."
+        }
+      ],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "rushing_river",
+      "name": "Rushing River",
+      "description": "A river roars past, black and fast. The current would drag you under in seconds.",
+      "exits": {
+        "north": "soggy_path",
+        "south": "far_bank"
+      },
+      "gather": {},
+      "actions": ["look", "go", "inventory"],
+      "requires": [
+        {
+          "type": "item",
+          "item": "raft",
+          "amount": 1,
+          "message": "The river is too violent to cross. You need a raft."
+        }
+      ],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "black_cliffline",
+      "name": "Black Cliffline",
+      "description": "A sheer wall of dark rock rises ahead. Handholds are scarce. One slip and you’re done.",
+      "exits": {
+        "west": "stone_foothills",
+        "east": "high_pass"
+      },
+      "gather": {},
+      "actions": ["look", "go", "inventory"],
+      "requires": [
+        {
+          "type": "item",
+          "item": "climbing_gear",
+          "amount": 1,
+          "message": "You can’t climb this safely. You need climbing gear."
+        }
+      ],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "old_ruins",
+      "name": "Old Ruins",
+      "description": "Stone blocks sink into the earth like broken teeth. The air feels colder here. Bramble Wall is south.",
+      "exits": {
+        "south": "bramble_wall"
+      },
+      "gather": {
+        "stone": 2
+      },
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "far_bank",
+      "name": "Far Bank",
+      "description": "Across the river, the forest looks older. The trees lean inward like they’re listening. Rushing River is north.",
+      "exits": {
+        "north": "rushing_river"
+      },
+      "gather": {
+        "food": 2
+      },
+      "actions": ["look", "go", "gather", "inventory"],
+      "requires": [],
+      "encounters": [],
+      "loot": {}
+    },
+
+    {
+      "id": "high_pass",
+      "name": "High Pass",
+      "description": "Wind howls through a narrow pass. The world below looks far away. Black Cliffline is west.",
+      "exits": {
+        "west": "black_cliffline"
+      },
+      "gather": {},
+      "actions": ["look", "go", "inventory"],
       "requires": [],
       "encounters": [],
       "loot": {}

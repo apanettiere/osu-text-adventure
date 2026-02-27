@@ -18,19 +18,24 @@ class Room:
 
 class Player:
     def __init__(self):
-        # Survival foundation (not used yet)
         self.max_hp = 30
         self.hp = 30
 
-        # Map foundation (not used yet)
         self.discovered_rooms = set()
+        self.room_positions = {}          # room_id -> (x, y)
+        self.current_pos = (0, 0)         
 
-        # Inventory (used now)
         self.inventory = {
             "wood": 0,
             "stone": 0,
             "food": 0
         }
+
+    def set_room_position(self, room_id: str, x: int, y: int) -> None:
+        self.room_positions[room_id] = (x, y)
+
+    def get_room_position(self, room_id: str) -> tuple[int, int] | None:
+        return self.room_positions.get(room_id)
 
     def get_inventory_lines(self) -> list[str]:
         lines = []

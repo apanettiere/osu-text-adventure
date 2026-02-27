@@ -139,30 +139,106 @@ def draw_game_screen(
     screen.blit(surf, (PADDING, input_y + 18))
 
 
-def draw_map_overlay(screen: pygame.Surface, font_title: pygame.font.Font, font_body: pygame.font.Font) -> None:
+def draw_map_overlay(
+    screen: pygame.Surface,
+    font_title: pygame.font.Font,
+    font_body: pygame.font.Font,
+    state: GameState,
+) -> None:
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 190))
     screen.blit(overlay, (0, 0))
 
     title = font_title.render("MAP", True, (240, 240, 240))
-    screen.blit(title, title.get_rect(center=(WIDTH // 2, 120)))
+    screen.blit(title, title.get_rect(center=(WIDTH // 2, 90)))
 
-    body_lines = [
-        "Map system coming soon.",
+    discovered = list(state.player.discovered_rooms)
+    positions = state.player.room_positions
+
+    if not discovered:
+        surf = font_body.render("No rooms discovered yet.", True, (220, 220, 220))
+        screen.blit(surf, surf.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
+        return
+
+    # Collect discovered positions (only those with coordinates)
+    coords = []
+    for room_id in discovered:
+        pos = positions.get(room_id)
+        if pos is not None:
+            coords.append(pos)
+
+    if not coords:
+        surf = font_body.render("Map data missing.", True, (220, 220, 220))
+        screen.blit(surf, surf.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
+        return
+
+    min_x = min(x for x, _ in coords)
+    max_x = max(x for x, _ in coords)
+    min_y = min(y for _, y in coords)
+    max_y = max(y for _, y in coords)
+
+    TILE = 16
+    DOT = 10
+
+    map_w = (max_x - min_x + 1) * TILE
+    map_h = (max_y - min_y + 1) * TILE
+
+    origin_x = (WIDTH // 2) - (map_w // 2)
+    origin_y = 150
+
+    # Panel behind the map
+    panel_pad = 18
+    panel_rect = pygame.Rect(
+        origin_x - panel_pad,
+        origin_y - panel_pad,
+        map_w + panel_pad * 2,
+        map_h + panel_pad * 2,
+    )
+    pygame.draw.rect(screen, (25, 25, 25), panel_rect, border_radius=10)
+    pygame.draw.rect(screen, (80, 80, 80), panel_rect, width=2, border_radius=10)
+
+    # Draw discovered rooms
+    for room_id in discovered:
+        pos = positions.get(room_id)
+        if pos is None:
+            continue
+
+        x, y = pos
+        sx = origin_x + (x - min_x) * TILE + (TILE - DOT) // 2
+        sy = origin_y + (y - min_y) * TILE + (TILE - DOT) // 2
+
+        rect = pygame.Rect(sx, sy, DOT, DOT)
+
+        dest_room = state.rooms.get(room_id)
+        is_blocked = bool(dest_room and dest_room.requires)
+
+        if room_id == state.current_room_id:
+            pygame.draw.rect(screen, (245, 245, 245), rect, border_radius=3)
+            at = font_body.render("@", True, (20, 20, 20))
+            screen.blit(at, at.get_rect(center=rect.center))
+
+        elif is_blocked:
+            pygame.draw.rect(screen, (110, 110, 110), rect, border_radius=3)
+            xsurf = font_body.render("X", True, (20, 20, 20))
+            screen.blit(xsurf, xsurf.get_rect(center=rect.center))
+
+        else:
+            pygame.draw.rect(screen, (170, 170, 170), rect, border_radius=3)
+
+    legend_lines = [
+        "@ = you",
+        ". = discovered room",
+        "X = blocked",
         "",
-        "This overlay is here to prove the UI architecture:",
-        "- Press M to toggle map overlay",
-        "- Later: discovered rooms, player marker, paths, icons",
-        "",
-        "Press M to return to the game.",
-        "Press ESC to return to the main menu."
+        "M = close",
+        "ESC = menu",
     ]
 
-    y = 200
-    for line in body_lines:
+    y = panel_rect.bottom + 18
+    for line in legend_lines:
         surf = font_body.render(line, True, (220, 220, 220))
         screen.blit(surf, (WIDTH // 2 - surf.get_width() // 2, y))
-        y += 30
+        y += 26
 
 
 def run_game(screen: pygame.Surface, clock: pygame.time.Clock) -> None:
@@ -200,7 +276,7 @@ def run_game(screen: pygame.Surface, clock: pygame.time.Clock) -> None:
                     continue
 
                 if mode == "map":
-                    continue
+                    draw_map_overlay(screen, font_overlay_title, font_overlay_body, state)
 
                 if event.key == pygame.K_PAGEUP:
                     scroll_offset += 5
@@ -237,7 +313,7 @@ def run_game(screen: pygame.Surface, clock: pygame.time.Clock) -> None:
         draw_game_screen(screen, font, font_bold, log_lines, input_text, scroll_offset)
 
         if mode == "map":
-            draw_map_overlay(screen, font_overlay_title, font_overlay_body)
+            draw_map_overlay(screen, font_overlay_title, font_overlay_body, state)
 
         pygame.display.flip()
 
