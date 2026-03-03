@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class Room:
     def __init__(self, data: dict):
         self.id          = data.get("id")
@@ -10,15 +13,12 @@ class Room:
         self.encounters  = data.get("encounters", [])
         self.loot        = data.get("loot", {})
 
-        # Walkable room fields
         self.width       = int(data.get("width",  1))
         self.height      = int(data.get("height", 1))
         self.is_walkable = self.width > 1 or self.height > 1
 
-        # Features: list of {id, label, desc, pos: [x, y]}
-        raw_features = data.get("features", [])
-        self.features = []
-        for f in raw_features:
+        self.features: list[dict] = []
+        for f in data.get("features", []):
             pos = f.get("pos", [-1, -1])
             self.features.append({
                 "id":    f.get("id", ""),
@@ -36,29 +36,23 @@ class Player:
         self.max_hp = 30
         self.hp     = 30
 
-        self.discovered_rooms = set()
-        self.room_positions   = {}       # room_id -> (world_x, world_y)
-        self.current_pos      = (0, 0)
+        self.discovered_rooms: set[str]              = set()
+        self.explored_rooms:   set[str]              = set()
+        self.room_positions:   dict[str, tuple[int,int]] = {}
+        self.current_pos:      tuple[int,int]        = (0, 0)
 
-        self.inventory = {"wood": 0, "stone": 0, "food": 0}
+        # World-map tiles revealed by walking (set of (world_col, world_row))
+        self.visited_tiles: set[tuple[int,int]] = set()
 
-    def set_room_position(self, room_id: str, x: int, y: int) -> None:
-        self.room_positions[room_id] = (x, y)
-
-    def get_room_position(self, room_id: str) -> tuple[int, int] | None:
-        return self.room_positions.get(room_id)
+        self.inventory: dict[str, int] = {"wood": 0, "stone": 0, "food": 0}
 
     def get_inventory_lines(self) -> list[str]:
         lines = ["\nInventory:"]
-        has_items = False
+        any_items = False
         for item, amount in self.inventory.items():
             if amount > 0:
-                lines.append(f"{item}: {amount}")
-                has_items = True
-        if not has_items:
-            lines.append("Empty")
+                lines.append(f"  {item}: {amount}")
+                any_items = True
+        if not any_items:
+            lines.append("  Empty")
         return lines
-
-    def show_inventory(self) -> None:
-        for line in self.get_inventory_lines():
-            print(line)

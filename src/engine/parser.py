@@ -32,10 +32,14 @@ def parse_command(text: str) -> tuple[str, str | None]:
     if len(parts) == 1 and parts[0] in aliases:
         return aliases[parts[0]]
 
-    # Allow "go n" etc.
     verb = parts[0]
     target = parts[1] if len(parts) > 1 else None
 
+    # "g wood" gather wood
+    if verb == "g" and target:
+        return "gather", target
+
+    # Allow "go n" etc.
     if verb == "go" and target:
         dir_alias = {
             "n": "north",
