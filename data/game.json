@@ -4,7 +4,7 @@
     {
       "id": "clearing",
       "name": "Forest Clearing",
-      "description": "Moonlight spills into a small clearing. The trees press in close, and the air smells like damp earth.",
+      "description": "Moonlight spills into a wide clearing ringed by ancient oaks. A crumbling stone well sits near the centre. Animal tracks cut through the mud near the tree line. A ring of scorched stones marks an old fire. The trees thicken to the north. A soggy path leads south. Loose stone breaks the ground east. Fallen pines block the west trail.",
       "exits": {
         "north": "shadow_trees",
         "south": "soggy_path",
@@ -12,15 +12,51 @@
         "west": "fallen_pines"
       },
       "gather": {
-        "wood": 1,
-        "food": 1
+        "wood": 2,
+        "food": 2,
+        "stone": 1
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
-      "loot": {}
+      "loot": {},
+      "width": 7,
+      "height": 7,
+      "features": [
+        {
+          "id": "well",
+          "label": "W",
+          "desc": "A stone well. The rope is gone. Cold air rises from the dark below.",
+          "pos": [
+            3,
+            3
+          ]
+        },
+        {
+          "id": "tracks",
+          "label": "T",
+          "desc": "Animal tracks pressed deep in the mud. Something large passed here recently.",
+          "pos": [
+            1,
+            1
+          ]
+        },
+        {
+          "id": "ash",
+          "label": "F",
+          "desc": "A ring of scorched stones. Someone built a fire here, not long ago.",
+          "pos": [
+            5,
+            5
+          ]
+        }
+      ]
     },
-
     {
       "id": "shadow_trees",
       "name": "Shadow Trees",
@@ -33,12 +69,16 @@
         "wood": 2,
         "stone": 1
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "soggy_path",
       "name": "Soggy Path",
@@ -50,12 +90,16 @@
       "gather": {
         "food": 1
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "stone_foothills",
       "name": "Stone Foothills",
@@ -67,12 +111,16 @@
       "gather": {
         "stone": 2
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "fallen_pines",
       "name": "Fallen Pines",
@@ -84,12 +132,16 @@
       "gather": {
         "wood": 2
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "deep_woods",
       "name": "Deep Woods",
@@ -102,16 +154,20 @@
         "wood": 3,
         "food": 1
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "fog_hollow",
       "name": "Fog Hollow",
-      "description": "A low hollow filled with drifting fog. You can’t see your feet clearly. Deep Woods are east.",
+      "description": "A low hollow filled with drifting fog. You can\u2019t see your feet clearly. Deep Woods are east.",
       "exits": {
         "east": "deep_woods",
         "west": "sinkhole_edge"
@@ -119,12 +175,16 @@
       "gather": {
         "food": 1
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "sinkhole_edge",
       "name": "Sinkhole Edge",
@@ -133,22 +193,29 @@
         "east": "fog_hollow"
       },
       "gather": {},
-      "actions": ["look", "go", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "bramble_wall",
       "name": "Bramble Wall",
-      "description": "A wall of brambles and thorned vines blocks the way. You’d get shredded without something to cut through.",
+      "description": "A wall of brambles and thorned vines blocks the way. You\u2019d get shredded without something to cut through.",
       "exits": {
         "south": "shadow_trees",
         "north": "old_ruins"
       },
       "gather": {},
-      "actions": ["look", "go", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "inventory"
+      ],
       "requires": [
         {
           "type": "item",
@@ -160,7 +227,6 @@
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "rushing_river",
       "name": "Rushing River",
@@ -170,7 +236,11 @@
         "south": "far_bank"
       },
       "gather": {},
-      "actions": ["look", "go", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "inventory"
+      ],
       "requires": [
         {
           "type": "item",
@@ -182,29 +252,31 @@
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "black_cliffline",
       "name": "Black Cliffline",
-      "description": "A sheer wall of dark rock rises ahead. Handholds are scarce. One slip and you’re done.",
+      "description": "A sheer wall of dark rock rises ahead. Handholds are scarce. One slip and you\u2019re done.",
       "exits": {
         "west": "stone_foothills",
         "east": "high_pass"
       },
       "gather": {},
-      "actions": ["look", "go", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "inventory"
+      ],
       "requires": [
         {
           "type": "item",
           "item": "climbing_gear",
           "amount": 1,
-          "message": "You can’t climb this safely. You need climbing gear."
+          "message": "You can\u2019t climb this safely. You need climbing gear."
         }
       ],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "old_ruins",
       "name": "Old Ruins",
@@ -215,28 +287,36 @@
       "gather": {
         "stone": 2
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "far_bank",
       "name": "Far Bank",
-      "description": "Across the river, the forest looks older. The trees lean inward like they’re listening. Rushing River is north.",
+      "description": "Across the river, the forest looks older. The trees lean inward like they\u2019re listening. Rushing River is north.",
       "exits": {
         "north": "rushing_river"
       },
       "gather": {
         "food": 2
       },
-      "actions": ["look", "go", "gather", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "gather",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
     },
-
     {
       "id": "high_pass",
       "name": "High Pass",
@@ -245,7 +325,11 @@
         "west": "black_cliffline"
       },
       "gather": {},
-      "actions": ["look", "go", "inventory"],
+      "actions": [
+        "look",
+        "go",
+        "inventory"
+      ],
       "requires": [],
       "encounters": [],
       "loot": {}
