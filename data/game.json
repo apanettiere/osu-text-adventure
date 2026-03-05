@@ -1,10 +1,118 @@
 {
   "starting_room": "clearing",
+  "items": {
+    "wood": {
+      "weight": 1,
+      "type": "resource",
+      "desc": "Dry timber. Burns well."
+    },
+    "stone": {
+      "weight": 2,
+      "type": "resource",
+      "desc": "Dense grey rock."
+    },
+    "food": {
+      "weight": 1,
+      "type": "resource",
+      "desc": "Berries, bark, whatever you can find."
+    },
+    "machete": {
+      "weight": 3,
+      "type": "tool",
+      "desc": "A heavy blade. Good for cutting through dense undergrowth."
+    },
+    "axe": {
+      "weight": 4,
+      "type": "tool",
+      "desc": "An old woodcutter's axe. The edge is still sharp."
+    },
+    "climbing_gear": {
+      "weight": 5,
+      "type": "tool",
+      "desc": "Rope, hooks, and a worn harness. Someone left this behind."
+    },
+    "raft": {
+      "weight": 8,
+      "type": "crafted",
+      "desc": "A rough raft of lashed logs. Heavy, but it will float."
+    },
+    "torch": {
+      "weight": 1,
+      "type": "crafted",
+      "desc": "A rag-wrapped stick soaked in fat. It will burn.",
+      "uses": 15
+    },
+    "note": {
+      "weight": 0,
+      "type": "readable",
+      "desc": "A folded note written in shaky handwriting.",
+      "readable": true
+    },
+    "backpack": {
+      "weight": 1,
+      "type": "equipment",
+      "desc": "A worn canvas pack. Loops of cord let you lash extra gear to it.",
+      "carry_bonus": 15
+    }
+  },
+  "recipes": {
+    "raft": {
+      "requires": {
+        "wood": 4,
+        "stone": 1
+      },
+      "desc": "Lash logs together with a stone weight."
+    },
+    "torch": {
+      "requires": {
+        "wood": 1,
+        "food": 1
+      },
+      "desc": "Wrap a stick in fat-soaked cloth and tie it off."
+    }
+  },
+  "combine_recipes": {
+    "rope+hook": {
+      "result": "climbing_gear",
+      "desc": "You thread the hook onto the rope and test the harness. It will hold."
+    },
+    "hook+rope": {
+      "result": "climbing_gear",
+      "desc": "You thread the hook onto the rope and test the harness. It will hold."
+    },
+    "log+log": {
+      "result": "raft_frame",
+      "desc": "Two logs lashed together. You need more."
+    },
+    "wood+stone": {
+      "result": "handaxe",
+      "desc": "A rough but workable handaxe."
+    }
+  },
+  "note_text": [
+    "If you are reading this, you found my camp.",
+    "",
+    "I came from the east \u2014 through the foothills. There is rope and gear",
+    "wedged in the rock face near the split boulder. You cannot miss it.",
+    "",
+    "The pines to the west hid my blade for weeks. Look under the largest",
+    "fallen log. The oilcloth will have kept the edge clean.",
+    "",
+    "North of here the trees are wrong. Something lives in them.",
+    "I found an axe behind the big mossy boulder \u2014 use it, but go carefully.",
+    "",
+    "Do not try to cross the river without a raft. I watched a man try.",
+    "",
+    "Get out. Light the fire on the high tower.",
+    "\u2014 R"
+  ],
   "rooms": [
     {
       "id": "clearing",
       "name": "Forest Clearing",
-      "description": "Moonlight spills into a wide clearing ringed by ancient oaks. A crumbling stone well sits near the centre. Animal tracks cut through the mud near the tree line. A ring of scorched stones marks an old fire. The trees thicken to the north. A soggy path leads south. Loose stone breaks the ground east. Old fallen pines block the west trail.",
+      "description": "Moonlight spills into a wide clearing ringed by ancient oaks. A crumbling stone well sits near the centre. Deep animal tracks cut through the mud near the eastern tree line. A ring of scorched stones marks an old fire to the south-east.",
+      "description_with_torch": "Your torch pushes the dark back. The clearing feels less exposed. Near the well you can make out faint scratch marks in the stone \u2014 letters, maybe.",
+      "description_with_axe": "The axe feels right in your hands. The clearing seems smaller somehow, more manageable.",
       "exits": {
         "north": "shadow_trees",
         "south": "soggy_path",
@@ -20,39 +128,50 @@
         "look",
         "go",
         "gather",
-        "inventory"
+        "inventory",
+        "take",
+        "craft",
+        "examine",
+        "drop",
+        "read",
+        "combine"
       ],
       "requires": [],
       "encounters": [],
-      "loot": {},
-      "width": 9,
-      "height": 9,
+      "loot": {
+        "note": 1
+      },
+      "width": 13,
+      "height": 13,
       "features": [
         {
           "id": "well",
           "label": "W",
-          "desc": "A stone well. The rope is gone. Cold air rises from the dark below.",
+          "desc": "A stone well. The rope is gone. Cold air rises from the dark below. Faint scratch marks ring the edge \u2014 you make out the letters W and T.",
+          "examine_clue": "The scratches read: W is west, T is north. Someone left directions.",
           "pos": [
-            4,
-            4
+            6,
+            6
           ]
         },
         {
           "id": "tracks",
           "label": "T",
-          "desc": "Animal tracks pressed deep in the mud. Something large passed here recently.",
+          "desc": "Animal tracks pressed deep in the mud. They come from the north and circle the clearing twice before heading west.",
+          "examine_clue": "The tracks are cloven. Whatever made them was heavy. They came from the north \u2014 shadow trees.",
           "pos": [
-            1,
-            1
+            2,
+            2
           ]
         },
         {
           "id": "ash",
           "label": "F",
-          "desc": "A ring of scorched stones. Someone built a fire here, not long ago.",
+          "desc": "A ring of scorched stones. Recent ash, not yet scattered. Someone built this fire within the last day.",
+          "examine_clue": "Under the stones you find a folded note half-burned at the corner. Take it.",
           "pos": [
-            7,
-            7
+            10,
+            10
           ]
         }
       ]
@@ -60,7 +179,9 @@
     {
       "id": "shadow_trees",
       "name": "Shadow Trees",
-      "description": "Tall trunks crowd together until the sky disappears. Every step snaps a twig too loud. Something watches from between the trees. A mossy boulder sits half-buried near the centre. Scratch marks scar the bark of a nearby pine \u2014 deep, like claws. The clearing is south.",
+      "description": "Tall trunks crowd together until the sky disappears. Every step snaps a twig too loud. Something watches from between the trees. A mossy boulder sits half-buried near the centre. Scratch marks scar the bark of a nearby pine.",
+      "description_with_torch": "The torchlight makes the shadows jump and writhe. It is worse with the light. You can see the claw marks clearly now \u2014 they are fresh.",
+      "description_with_machete": "The machete gives you something to hold. The watching feeling does not go away but at least you have an answer for it.",
       "exits": {
         "south": "clearing",
         "north": "bramble_wall"
@@ -73,29 +194,44 @@
         "look",
         "go",
         "gather",
-        "inventory"
+        "inventory",
+        "take",
+        "craft",
+        "examine",
+        "drop",
+        "combine"
       ],
       "requires": [],
       "encounters": [],
-      "loot": {},
-      "width": 11,
-      "height": 7,
+      "loot": {
+        "axe": 1
+      },
+      "loot_hidden": {
+        "axe": true
+      },
+      "loot_hint": {
+        "axe": "boulder"
+      },
+      "width": 15,
+      "height": 9,
       "features": [
         {
           "id": "boulder",
           "label": "B",
-          "desc": "A mossy boulder, half-buried. Good for sitting. Or hiding behind.",
+          "desc": "A mossy boulder, half-buried. The gap behind it is dark. There is something wedged in there.",
+          "examine_clue": "You reach into the gap and pull out an axe wrapped in oilcloth. The edge is still good.",
           "pos": [
-            5,
-            3
+            7,
+            4
           ]
         },
         {
           "id": "scratches",
           "label": "S",
-          "desc": "Deep claw marks in the bark. Something large made these. Recently.",
+          "desc": "Claw marks deep in the bark. Four parallel gouges at about head height. They point south \u2014 toward the clearing.",
+          "examine_clue": "The marks are too regular for any animal you know. Spaced like fingers. Something with hands made these.",
           "pos": [
-            2,
+            3,
             1
           ]
         }
@@ -104,7 +240,8 @@
     {
       "id": "soggy_path",
       "name": "Soggy Path",
-      "description": "Mud clings to your boots with every step. The ground sucks at your feet like it wants to keep you. A gnarled root breaks the surface near the middle of the path. Somewhere south, water roars like it never sleeps. A rusted tin cup sits in the mud \u2014 someone else was here. The clearing is north.",
+      "description": "Mud clings to your boots with every step. The ground sucks at your feet like it wants to keep you. A gnarled root breaks the surface near the middle. Somewhere south, water roars like it never sleeps. A rusted tin cup sits in the mud.",
+      "description_with_raft": "You are carrying the raft. It is awkward and heavy and bangs against every tree. But it will get you across.",
       "exits": {
         "north": "clearing",
         "south": "rushing_river"
@@ -116,30 +253,37 @@
         "look",
         "go",
         "gather",
-        "inventory"
+        "inventory",
+        "take",
+        "craft",
+        "examine",
+        "drop",
+        "combine"
       ],
       "requires": [],
       "encounters": [],
       "loot": {},
-      "width": 7,
-      "height": 11,
+      "width": 9,
+      "height": 15,
       "features": [
         {
           "id": "root",
           "label": "R",
           "desc": "A thick gnarled root humps out of the mud. Easy to trip on in the dark.",
+          "examine_clue": "The root runs south toward the river. Old and deep-set. This path has been here a long time.",
           "pos": [
-            3,
-            5
+            4,
+            7
           ]
         },
         {
           "id": "cup",
           "label": "C",
-          "desc": "A rusted tin cup half-buried in the mud. Someone camped here before you.",
+          "desc": "A rusted tin cup half-buried in the mud. A name is scratched inside: R.",
+          "examine_clue": "The same initial as the note in the clearing. Whoever camped here was heading south \u2014 toward the river.",
           "pos": [
             1,
-            8
+            11
           ]
         }
       ]
@@ -147,7 +291,8 @@
     {
       "id": "stone_foothills",
       "name": "Stone Foothills",
-      "description": "Loose rock slides underfoot. The forest thins, replaced by cold stone and a rising wind. A boulder split by lightning marks this place. Scratched into the rock face: an arrow pointing up. The clearing is west.",
+      "description": "Loose rock slides underfoot. The forest thins here, replaced by cold stone and a rising wind. A boulder split by lightning marks this place. Scratched into the rock face: an arrow pointing up.",
+      "description_with_climbing_gear": "The harness sits right on your shoulders. You have done this before, maybe. Your hands know the hooks.",
       "exits": {
         "west": "clearing",
         "east": "black_cliffline"
@@ -160,29 +305,38 @@
         "look",
         "go",
         "gather",
-        "inventory"
+        "inventory",
+        "take",
+        "craft",
+        "examine",
+        "drop",
+        "combine"
       ],
       "requires": [],
       "encounters": [],
-      "loot": {},
-      "width": 9,
-      "height": 7,
+      "loot": {
+        "climbing_gear": 1
+      },
+      "width": 13,
+      "height": 9,
       "features": [
         {
           "id": "split_boulder",
           "label": "B",
           "desc": "A boulder split clean by lightning. One half leans against the other like old friends.",
+          "examine_clue": "The split is old, the edges worn smooth. The crack runs east toward the cliff face. A natural path.",
           "pos": [
-            4,
-            3
+            6,
+            4
           ]
         },
         {
           "id": "inscription",
           "label": "I",
-          "desc": "Scratched into the rock: an arrow pointing up. Below it, a word worn smooth. You cannot read it.",
+          "desc": "Scratched into the rock: an arrow pointing up. Below it, one word worn almost smooth. You can barely make out: TOWER.",
+          "examine_clue": "The arrow points northeast. Someone who knew the way left this mark. The tower is real.",
           "pos": [
-            7,
+            10,
             1
           ]
         }
@@ -191,7 +345,8 @@
     {
       "id": "fallen_pines",
       "name": "Fallen Pines",
-      "description": "Old pines lie snapped and piled like bones. The air smells of pitch and rot. A rusted tin lantern hangs from a branch \u2014 someone was here before you. Deeper west the trees press so tight light fails entirely. The clearing is east.",
+      "description": "Old pines lie snapped and piled like bones. The air smells of pitch and rot. A rusted tin lantern hangs from a branch. Half hidden under a log: something wrapped in oilcloth.",
+      "description_with_axe": "With the axe you could clear some of this. The pines would give good wood. The path west might be cuttable.",
       "exits": {
         "east": "clearing",
         "west": "deep_woods"
@@ -204,30 +359,46 @@
         "look",
         "go",
         "gather",
-        "inventory"
+        "inventory",
+        "take",
+        "craft",
+        "examine",
+        "drop",
+        "combine"
       ],
       "requires": [],
       "encounters": [],
-      "loot": {},
-      "width": 9,
-      "height": 7,
+      "loot": {
+        "machete": 1,
+        "backpack": 1
+      },
+      "loot_hidden": {
+        "backpack": true
+      },
+      "loot_hint": {
+        "backpack": "lantern"
+      },
+      "width": 13,
+      "height": 9,
       "features": [
         {
           "id": "lantern",
           "label": "L",
-          "desc": "A rusted tin lantern on a low branch. The oil is long gone. But someone hung it here.",
+          "desc": "A rusted tin lantern on a low branch. The oil is long gone. But behind it, hanging from the same nail, is a rolled canvas pack.",
+          "examine_clue": "You unhook the pack from the nail. It is worn but sound. It will let you carry more.",
           "pos": [
-            4,
-            3
+            6,
+            4
           ]
         },
         {
           "id": "log_pile",
           "label": "P",
-          "desc": "Pines piled high, bark stripped white. They've been here for years.",
+          "desc": "Pines piled high, bark stripped white. Under the nearest log, oilcloth is bundled around something long and heavy.",
+          "examine_clue": "You drag the bundle out. A machete, edge still clean under the cloth. Take it.",
           "pos": [
-            1,
-            5
+            2,
+            6
           ]
         }
       ]
@@ -235,7 +406,7 @@
     {
       "id": "bramble_wall",
       "name": "Bramble Wall",
-      "description": "A wall of brambles and thorned vines blocks the way. You'd get shredded without something to cut through.",
+      "description": "A wall of brambles and thorned vines blocks the way. You would get shredded without something to cut through.",
       "exits": {
         "south": "shadow_trees"
       },
@@ -243,7 +414,8 @@
       "actions": [
         "look",
         "go",
-        "inventory"
+        "inventory",
+        "drop"
       ],
       "requires": [
         {
@@ -267,7 +439,8 @@
       "actions": [
         "look",
         "go",
-        "inventory"
+        "inventory",
+        "drop"
       ],
       "requires": [
         {
@@ -283,7 +456,7 @@
     {
       "id": "black_cliffline",
       "name": "Black Cliffline",
-      "description": "A sheer wall of dark rock rises ahead. Handholds are scarce. One slip and you're done.",
+      "description": "A sheer wall of dark rock rises ahead. Handholds are scarce. One slip and you are done.",
       "exits": {
         "west": "stone_foothills"
       },
@@ -291,14 +464,15 @@
       "actions": [
         "look",
         "go",
-        "inventory"
+        "inventory",
+        "drop"
       ],
       "requires": [
         {
           "type": "item",
           "item": "climbing_gear",
           "amount": 1,
-          "message": "You can't climb this safely. You need climbing gear."
+          "message": "You cannot climb this safely. You need climbing gear."
         }
       ],
       "encounters": [],
@@ -307,7 +481,7 @@
     {
       "id": "deep_woods",
       "name": "Deep Woods",
-      "description": "The forest grows so thick the light dies entirely. You can feel the trees closing in. You'd need an axe to cut through.",
+      "description": "The forest grows so thick the light dies entirely. You can feel the trees closing in around you.",
       "exits": {
         "east": "fallen_pines"
       },
@@ -315,14 +489,15 @@
       "actions": [
         "look",
         "go",
-        "inventory"
+        "inventory",
+        "drop"
       ],
       "requires": [
         {
           "type": "item",
           "item": "axe",
           "amount": 1,
-          "message": "The forest is too dense. You'd need an axe to cut through."
+          "message": "The forest is too dense. You need an axe to cut through."
         }
       ],
       "encounters": [],

@@ -22,22 +22,24 @@ def room_map(game_data):
 
 
 class TestRoomDimensions:
-    def test_clearing_is_9x9(self, room_map):
+    def test_clearing_is_13x13(self, room_map):
         r = room_map["clearing"]
-        assert r.width == 9 and r.height == 9
+        assert r.width == 13 and r.height == 13
 
-    def test_shadow_trees_is_11x7(self, room_map):
+    def test_shadow_trees_is_15x9(self, room_map):
         r = room_map["shadow_trees"]
-        assert r.width == 11 and r.height == 7
+        assert r.width == 15 and r.height == 9
 
-    def test_soggy_path_is_7x11(self, room_map):
+    def test_soggy_path_is_9x15(self, room_map):
         r = room_map["soggy_path"]
-        assert r.width == 7 and r.height == 11
+        assert r.width == 9 and r.height == 15
 
     def test_all_three_are_walkable(self, room_map):
         for rid in ("clearing", "shadow_trees", "soggy_path"):
             assert room_map[rid].is_walkable, f"{rid} should be walkable"
 
+
+# ─── Room features ────────────────────────────────────────────────────────────
 
 class TestRoomFeatures:
     def test_clearing_has_three_features(self, room_map):
@@ -45,7 +47,7 @@ class TestRoomFeatures:
 
     def test_clearing_well_at_centre(self, room_map):
         well = next(f for f in room_map["clearing"].features if f["id"] == "well")
-        assert well["pos"] == (4, 4)
+        assert well["pos"] == (6, 6)
 
     def test_clearing_feature_labels(self, room_map):
         labels = {f["label"] for f in room_map["clearing"].features}
