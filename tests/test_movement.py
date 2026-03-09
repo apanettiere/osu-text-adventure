@@ -102,7 +102,7 @@ class TestRoomModel:
 
 class TestIntraRoomMovement:
     def setup_method(self):
-        # 7×7 clearing, no exits yet — tests pure walking
+        # 7×7 clearing, no exits yet - tests pure walking
         self.state = build_state(
             [make_walkable_room("clearing", 7, 7)],
             "clearing",
@@ -143,7 +143,7 @@ class TestIntraRoomMovement:
             self.state.handle_go("north")
         assert self.state.local_y == 0
         lines = self.state.handle_go("north")
-        # Still in the same room — no exit defined
+        # Still in the same room - no exit defined
         assert self.state.current_room_id == "clearing"
         assert any("cannot" in l.lower() or "nothing" in l.lower() for l in lines)
 
@@ -168,10 +168,10 @@ class TestFeatureProximity:
             [make_walkable_room("clearing", 7, 7, features=features)],
             "clearing",
         )
-        # Player starts at (3, 3) — exactly on the well
+        # Player starts at (3, 3) - exactly on the well
 
     def test_feature_desc_shown_when_adjacent(self):
-        # Move one step — still adjacent to (3,3)
+        # Move one step - still adjacent to (3,3)
         self.state.local_x = 3
         self.state.local_y = 4
         lines = self.state.handle_go("north")   # moves to (3,3)
@@ -180,8 +180,34 @@ class TestFeatureProximity:
     def test_no_feature_desc_when_far_away(self):
         self.state.local_x = 0
         self.state.local_y = 0
-        lines = self.state.handle_go("east")    # moves to (1, 0) — far from well
+        lines = self.state.handle_go("east")    # moves to (1, 0) - far from well
         assert not any("well" in l.lower() for l in lines)
+
+
+class TestNearbyItemHints:
+    def test_nearby_visible_item_shows_item_hint(self):
+        room = make_walkable_room("clearing", 7, 7)
+        room["loot"] = {"note": 1}
+        state = build_state([room], "clearing")
+        state.local_x = 3
+        state.local_y = 4
+
+        lines = state.handle_go("south")
+
+        assert any("nearby item" in l.lower() and "note" in l.lower() for l in lines)
+        assert any("take note" in l.lower() for l in lines)
+
+    def test_hidden_item_does_not_show_nearby_hint(self):
+        room = make_walkable_room("clearing", 7, 7)
+        room["loot"] = {"note": 1}
+        room["loot_hidden"] = {"note": True}
+        state = build_state([room], "clearing")
+        state.local_x = 3
+        state.local_y = 4
+
+        lines = state.handle_go("south")
+
+        assert not any("nearby item" in l.lower() for l in lines)
 
 
 
@@ -232,7 +258,7 @@ class TestRoomTransition:
 
 
 class TestEntrySpawn:
-    """ENTRY_SPAWN lambdas are pure functions — test them directly."""
+    """ENTRY_SPAWN lambdas are pure functions - test them directly."""
 
     def test_entering_from_north_spawns_at_south_wall(self):
         x, y = ENTRY_SPAWN["north"](7, 7)

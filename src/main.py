@@ -6,7 +6,10 @@ def main() -> None:
     state = GameState()
 
     print("The Dark Forest")
-    print("Type: look, go <direction>, gather <resource>, inventory, quit")
+    print("Type: help for commands. Core: look, go <direction>, take, examine, enter, read, use, hint, inventory, quit")
+
+    for line in state.get_intro_lines():
+        print(line)
 
     for line in state.describe_current_room():
         print(line)
