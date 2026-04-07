@@ -430,3 +430,22 @@ class TestPuzzleFlows:
         assert gs2.current_room_id == "cave_entrance"
         gs2.process_command("take", "old_map")
         assert gs2.player.inventory.get("old_map", 0) == 1
+
+
+class TestLighthouseWinCondition:
+    def test_enter_lighthouse_goes_to_interior(self, gs):
+        teleport(gs, "mountain_pass")
+        gs.process_command("enter", "lighthouse")
+        assert gs.current_room_id == "lighthouse_interior"
+
+    def test_enter_top_goes_to_lantern_room(self, gs):
+        teleport(gs, "lighthouse_interior")
+        gs.process_command("enter", "top")
+        assert gs.current_room_id == "lighthouse_top"
+
+    def test_light_lighthouse_signal_ends_game(self, gs):
+        teleport(gs, "lighthouse_top")
+        result = gs.process_command("use", "lighthouse_light")
+        full = " ".join(result).lower()
+        assert "sos" in full
+        assert gs.is_running is False

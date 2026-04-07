@@ -24,9 +24,19 @@ MAP_ROOM_POS: dict[str, tuple[int,int]] = {
     "cave_entrance":  (33, 16),
     "far_shore":      (21, 47),
     "mountain_pass":  ( 2, 16),
+    "lighthouse_interior": ( 4, 8),
+    "lighthouse_top":      ( 6, 3),
 }
 
 REVEAL_RADIUS = 2
+
+ENTER_TARGET_ALIASES: dict[str, str] = {
+    "tower": "lighthouse",
+    "stairs": "spiral_stairs",
+    "staircase": "spiral_stairs",
+    "top": "spiral_stairs",
+    "upstairs": "spiral_stairs",
+}
 
 
 def _encode_visited_tiles(tiles: set[tuple[int, int]]) -> list[list[object]]:
@@ -338,12 +348,16 @@ class GameState:
                 return "Hint: go north, enter the cabin, and take the raft. Then use raft here to cross south."
             return "Hint: use raft to cross south to the far shore."
         if room.id == "mountain_pass":
-            return "Hint: examine the lighthouse and cliff edge to confirm the river meets the bay."
+            return "Hint: enter lighthouse, then climb to the top and light the signal."
+        if room.id == "lighthouse_interior":
+            return "Hint: enter spiral stairs to reach the lantern room at the top."
+        if room.id == "lighthouse_top":
+            return "Hint: use lantern or light lighthouse light to send SOS."
         return None
 
     def handle_help(self) -> list[str]:
         return [
-            "Objective: reach the lighthouse.",
+            "Objective: reach the lighthouse top and signal SOS.",
             "Movement: arrow keys or go north/south/east/west (n/s/e/w).",
             "Core commands: look, examine <thing>, enter <feature>, take <item>, use <item>, read <item>, inventory, hint.",
             "Crafting prep: gather <wood|stone|food>, and drop <item> when you need space.",
@@ -361,14 +375,88 @@ class GameState:
             return [hint]
         return ["Hint: examine nearby features and read any notes or maps you find."]
 
+    def _resolve_enter_target(self, target: str) -> str:
+        return ENTER_TARGET_ALIASES.get(target, target)
+
+    def _requirement_block_message(self, room) -> str | None:
+        if not room or not room.requires:
+            return None
+        for req in room.requires:
+            if req.get("type") != "item":
+                continue
+            item = req.get("item")
+            amount = int(req.get("amount", 1))
+            if int(self.player.inventory.get(item, 0)) < amount:
+                return req.get("message", "You cannot go there yet.")
+        return None
+
+    def _move_to_room_from_feature(self, next_room_id: str) -> list[str]:
+        dest = self.rooms.get(next_room_id)
+        if not dest:
+            return ["Error: feature points to a missing room in game.json"]
+
+        blocked = self._requirement_block_message(dest)
+        if blocked:
+            self.player.discovered_rooms.add(next_room_id)
+            return [blocked]
+
+        if next_room_id not in self.player.room_positions:
+            self.player.room_positions[next_room_id] = self.player.room_positions.get(self.current_room_id, (0, 0))
+
+        self.player.current_pos = self.player.room_positions.get(next_room_id, (0, 0))
+        self.player.discovered_rooms.add(next_room_id)
+        self.player.explored_rooms.add(next_room_id)
+        self.current_room_id = next_room_id
+
+        if dest.is_walkable:
+            self.local_x = dest.width // 2
+            self.local_y = dest.height // 2
+        else:
+            self.local_x = 0
+            self.local_y = 0
+        self._mark_visited()
+        return self.describe_current_room()
+
+    def _handle_lighthouse_victory(self, target: str) -> list[str] | None:
+        if self.current_room_id != "lighthouse_top":
+            return None
+        valid_targets = {
+            "lantern",
+            "torch",
+            "signal_brazier",
+            "signal_lens",
+            "lighthouse_light",
+            "light",
+            "sos",
+            "fire",
+            "beacon",
+        }
+        if target not in valid_targets:
+            return None
+
+        self.is_running = False
+        return [
+            "You strike the dry fuel in the lantern room and the fire catches.",
+            "The lighthouse lens turns and a white beam punches through the dark sky.",
+            "You signal three long, three short, three long flashes: SOS.",
+            "A distant horn answers from the water below.",
+            "You win. Help has seen your signal.",
+        ]
+
     def handle_enter(self, target) -> list[str]:
         if not target:
             return ["Enter what? Example: enter cabin"]
         room = self.get_current_room()
         if not room:
             return ["Error: current room not found."]
+        target = self._resolve_enter_target(target)
         for feat in room.features:
             if feat["id"] == target or feat["label"].lower() == target:
+                destination = feat.get("enter_to")
+                if destination:
+                    lines = [f"You step into the {feat['id'].replace('_',' ')}."]
+                    lines.extend(self._move_to_room_from_feature(destination))
+                    return lines
                 lines = [f"You step into the {feat['id'].replace('_',' ')}."]
                 # Reuse examine so entering and searching share reveal behavior.
                 extra = self.handle_examine(feat["id"])
@@ -437,6 +525,9 @@ class GameState:
         if not room:
             return ["Error: current room not found."]
         if target not in DIRECTION_DELTAS:
+            enter_target = self._resolve_enter_target(target)
+            if any(feat["id"] == enter_target or feat["label"].lower() == enter_target for feat in room.features):
+                return self.handle_enter(enter_target)
             return ["Map supports only: north, south, east, west"]
 
         if room.is_walkable:
@@ -474,15 +565,10 @@ class GameState:
 
         dest_room = self.rooms.get(next_room_id)
 
-        if dest_room and dest_room.requires:
-            for req in dest_room.requires:
-                if req.get("type") == "item":
-                    item    = req.get("item")
-                    amount  = int(req.get("amount", 1))
-                    message = req.get("message", "You cannot go there yet.")
-                    if int(self.player.inventory.get(item, 0)) < amount:
-                        self.player.discovered_rooms.add(next_room_id)
-                        return [message]
+        blocked = self._requirement_block_message(dest_room)
+        if blocked:
+            self.player.discovered_rooms.add(next_room_id)
+            return [blocked]
 
         self.player.current_pos = (nx, ny)
         self.player.discovered_rooms.add(next_room_id)
@@ -654,11 +740,16 @@ class GameState:
     def handle_use(self, target) -> list[str]:
         if not target:
             return ["Use what? Example: use raft"]
-        if self.player.inventory.get(target, 0) <= 0:
-            return [f"You are not carrying a {target.replace('_', ' ')}."]
         room = self.get_current_room()
         if not room:
             return ["Error: current room not found."]
+
+        win_lines = self._handle_lighthouse_victory(target)
+        if win_lines is not None:
+            return win_lines
+
+        if self.player.inventory.get(target, 0) <= 0:
+            return [f"You are not carrying a {target.replace('_', ' ')}."]
         _use_messages: dict[str, str] = {
             "raft":          "You drag the raft to the bank and push off into the current. The river fights you, but you make it across.",
             "machete":       "You raise the machete and hack through the tangled brambles. Thorns tear your sleeves but you force a path through.",

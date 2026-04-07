@@ -67,7 +67,7 @@
   ],
   "intro_text": [
     "You wake in a cold clearing with a pounding head.",
-    "Objective: reach the lighthouse after climbing the cliff.",
+    "Objective: reach the lighthouse top and signal SOS.",
     "Hint: type help to see commands, and read note for your starting guidance."
   ],
   "note_text": [
@@ -84,7 +84,7 @@
     "Start here:",
     "Take the machete in the clearing.",
     "Go north, enter the cabin, and gather the lantern with oil plus climbing gear.",
-    "Use the climbing gear at the cliff to see the lighthouse."
+    "Use the climbing gear at the cliff to reach the lighthouse, climb to the top, and signal SOS."
   ],
   "rooms": [
     {
@@ -371,7 +371,7 @@
     {
       "id": "mountain_pass",
       "name": "Mountain Pass",
-      "description": "You climb onto a broad cliff shelf of weathered grey stone. The lighthouse stands ahead on high ground, white tower against dark sky. To the west, a blue bay opens into the ocean below the cliffs.",
+      "description": "You climb onto a broad cliff shelf of weathered grey stone. The lighthouse stands ahead on high ground, white tower against dark sky. Its heavy door is half open. To the west, a blue bay opens into the ocean below the cliffs.",
       "exits": {
         "east": "clearing"
       },
@@ -386,6 +386,7 @@
         "inventory",
         "examine",
         "enter",
+        "use",
         "read",
         "drop"
       ],
@@ -407,6 +408,7 @@
           "label": "H",
           "desc": "A weather-beaten lighthouse rises from the cliff top. Salt and wind have scarred the white paint.",
           "examine_clue": "The lantern room still has dry fuel and a striker. This is the signal point the note described.",
+          "enter_to": "lighthouse_interior",
           "pos": [
             6,
             2
@@ -420,6 +422,89 @@
           "pos": [
             3,
             7
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lighthouse_interior",
+      "name": "Lighthouse Interior",
+      "description": "You step into the lighthouse and pull the door shut against the wind. A spiral iron staircase winds upward into the dark lantern room.",
+      "exits": {
+        "south": "mountain_pass"
+      },
+      "gather": {},
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "inventory",
+        "examine",
+        "enter",
+        "use",
+        "read",
+        "drop"
+      ],
+      "requires": [],
+      "encounters": [],
+      "loot": {},
+      "features": [
+        {
+          "id": "spiral_stairs",
+          "label": "S",
+          "desc": "Narrow iron stairs curl around the wall toward the lantern room.",
+          "examine_clue": "The top platform holds the signal lens and brazier. One more climb and you can send a distress signal.",
+          "enter_to": "lighthouse_top",
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lighthouse_top",
+      "name": "Lantern Room",
+      "description": "You reach the top beneath thick glass panes. A cold brazier sits below the lighthouse lens, and the old shutters still move on their gears.",
+      "exits": {
+        "south": "lighthouse_interior"
+      },
+      "gather": {},
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "inventory",
+        "examine",
+        "enter",
+        "use",
+        "read",
+        "drop"
+      ],
+      "requires": [],
+      "encounters": [],
+      "loot": {},
+      "features": [
+        {
+          "id": "signal_brazier",
+          "label": "B",
+          "desc": "A wide brass brazier packed with dry fuel and wick rope.",
+          "examine_clue": "Everything is ready. Light it and signal three long, three short, three long flashes: SOS.",
+          "pos": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "signal_lens",
+          "label": "L",
+          "desc": "The lighthouse lens towers over you, polished and waiting.",
+          "examine_clue": "With the fire lit, this lens will throw a bright SOS beam across the bay and out to sea.",
+          "pos": [
+            0,
+            0
           ]
         }
       ]

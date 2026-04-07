@@ -285,6 +285,8 @@ MAP_ROOM_SIZE = {
     "cave_entrance":  (13, 11),
     "far_shore":      ( 9,  5),
     "mountain_pass":  (13, 11),
+    "lighthouse_interior": (1, 1),
+    "lighthouse_top":      (1, 1),
 }
 
 # Item-gated blockers between regions. Water is procedural.
@@ -318,6 +320,9 @@ FEATURE_COLORS = {
     "flat_stone":   (122, 122, 128),
     "lighthouse":   (230, 225, 170),
     "cliff_edge":   (175, 170, 162),
+    "spiral_stairs": (185, 175, 140),
+    "signal_brazier": (220, 120, 65),
+    "signal_lens":    (210, 235, 240),
 }
 
 ITEM_MAP_COLORS = {

@@ -103,3 +103,15 @@ def test_parse_controls_alias():
     verb, target = parse_command("controls")
     assert verb == "help"
     assert target is None
+
+
+def test_parse_enter_top_alias_to_spiral_stairs():
+    verb, target = parse_command("enter top")
+    assert verb == "enter"
+    assert target == "top"
+
+
+def test_parse_light_lighthouse_light_phrase():
+    verb, target = parse_command("light the lighthouse light")
+    assert verb == "use"
+    assert target == "lighthouse_light"

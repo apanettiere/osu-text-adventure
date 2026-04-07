@@ -56,6 +56,11 @@ VERB_ALIASES = {
     "get": "take",
     "make": "craft",
     "build": "craft",
+    "climb": "enter",
+    "light": "use",
+    "ignite": "use",
+    "signal": "use",
+    "point": "use",
 }
 
 TARGET_FILLERS = {
@@ -73,6 +78,9 @@ TWO_WORD_TARGETS = {
     ("trail", "marker"): "trail_marker",
     ("cliff", "edge"): "cliff_edge",
     ("signal", "brazier"): "signal_brazier",
+    ("signal", "lens"): "signal_lens",
+    ("spiral", "stairs"): "spiral_stairs",
+    ("lighthouse", "light"): "lighthouse_light",
     ("fire", "pit"): "firepit",
     ("far", "shore"): "far_shore",
 }

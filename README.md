@@ -13,14 +13,16 @@ python pygame_main.py
 ## Final Alpha Design
 
 ### Core objective
-- Reach the lighthouse by collecting required tools and crossing blockers.
+- Reach the lighthouse top and send an SOS signal.
 
 ### Current room flow
 - `clearing` -> start area with `machete` and `note`
 - `thick_forest` (north) -> requires `machete`, contains `lantern`, `raft`, `climbing_gear`
 - `riverbank` (south) -> cross to `far_shore` with `raft`
 - `cave_entrance` (east) -> requires `lantern`, includes `old_map` and cave painting clue
-- `mountain_pass` (west) -> requires `climbing_gear`, contains lighthouse endgame area
+- `mountain_pass` (west) -> requires `climbing_gear`, enter lighthouse from here
+- `lighthouse_interior` -> climb spiral stairs to the top
+- `lighthouse_top` -> light the beacon (`use lantern` or `light lighthouse light`) to win
 
 ### Controls
 - Movement: Arrow keys, or `go north/south/east/west` (shortcuts `n/s/e/w`)
@@ -43,6 +45,7 @@ python pygame_main.py
 3. Go east to cave with lantern, examine flat stone for painting/map clue
 4. Go south to riverbank and cross with raft
 5. Go west from clearing and enter mountain pass with climbing gear
+6. `enter lighthouse`, `enter top`, then `light lighthouse light` to finish
 
 ## Project Structure
 

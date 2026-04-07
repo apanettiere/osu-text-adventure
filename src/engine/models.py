@@ -34,6 +34,7 @@ class Room:
                 "label":        f.get("label", "?"),
                 "desc":         f.get("desc", ""),
                 "examine_clue": f.get("examine_clue", ""),
+                "enter_to":     f.get("enter_to"),
                 "pos":          (int(pos[0]), int(pos[1])),
             })
 
