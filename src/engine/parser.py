@@ -71,15 +71,33 @@ TARGET_FILLERS = {
 TWO_WORD_TARGETS = {
     ("climbing", "gear"): "climbing_gear",
     ("old", "map"): "old_map",
+    ("river", "lake"): "river_lake",
+    ("river", "run"): "river_run",
     ("flat", "stone"): "flat_stone",
+    ("cave", "tunnel"): "cave_tunnel",
+    ("cave", "chamber"): "cave_chamber",
+    ("cabin", "interior"): "cabin_interior",
+    ("loft", "ladder"): "loft_ladder",
+    ("cabin", "bunk"): "cabin_bunk",
+    ("work", "table"): "worktable",
+    ("stone", "column"): "stone_column",
+    ("echo", "pool"): "echo_pool",
+    ("chamber", "ledge"): "chamber_ledge",
     ("flat", "rock"): "flat_rock",
     ("rope", "post"): "rope_post",
     ("fallen", "tree"): "fallen_tree",
     ("trail", "marker"): "trail_marker",
     ("cliff", "edge"): "cliff_edge",
+    ("tide", "pool"): "tide_pool",
     ("signal", "brazier"): "signal_brazier",
     ("signal", "lens"): "signal_lens",
+    ("signal", "lever"): "signal_lever",
     ("spiral", "stairs"): "spiral_stairs",
+    ("fogged", "window"): "fogged_window",
+    ("maintenance", "locker"): "maintenance_locker",
+    ("winch", "console"): "winch_console",
+    ("shutter", "crank"): "shutter_crank",
+    ("catwalk", "hatch"): "catwalk_hatch",
     ("lighthouse", "light"): "lighthouse_light",
     ("fire", "pit"): "firepit",
     ("far", "shore"): "far_shore",
@@ -105,6 +123,8 @@ def _map_target(tokens: list[str]) -> str | None:
         mapped = TWO_WORD_TARGETS.get((tokens[0], tokens[1]))
         if mapped:
             return mapped
+    if tokens[0] == "rafter":
+        return "raft"
     return tokens[0]
 
 

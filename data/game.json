@@ -83,8 +83,9 @@
     "",
     "Start here:",
     "Take the machete in the clearing.",
-    "Go north, enter the cabin, and gather the lantern with oil plus climbing gear.",
-    "Use the climbing gear at the cliff to reach the lighthouse, climb to the top, and signal SOS."
+    "Go north, enter the cabin, and take the lantern with oil, the bundled raft, and climbing gear.",
+    "Use climbing gear at the cliff route to reach the lighthouse.",
+    "Climb to the top and signal SOS."
   ],
   "rooms": [
     {
@@ -163,7 +164,7 @@
       "id": "thick_forest",
       "name": "Thick Forest",
       "description": "You push through the last of the brambles into dense forest. The canopy closes out the sky. A dark cabin sits between two ancient oaks, its door hanging open. Someone lived here once, or tried to.",
-      "description_with_lantern": "The lantern fills the cabin with warm light. You can see the gear stacked in the corner clearly now: climbing gear and a bundled raft.",
+      "description_with_lantern": "Lantern light cuts through the thicket. Through the open cabin doorway you can make out a bundled raft and supplies inside.",
       "exits": {
         "south": "clearing"
       },
@@ -193,21 +194,9 @@
         }
       ],
       "encounters": [],
-      "loot": {
-        "lantern": 1,
-        "climbing_gear": 1,
-        "raft": 1
-      },
-      "loot_hidden": {
-        "lantern": true,
-        "climbing_gear": true,
-        "raft": true
-      },
-      "loot_hint": {
-        "lantern": "cabin",
-        "climbing_gear": "cabin",
-        "raft": "cabin"
-      },
+      "loot": {},
+      "loot_hidden": {},
+      "loot_hint": {},
       "width": 19,
       "height": 13,
       "features": [
@@ -215,7 +204,8 @@
           "id": "cabin",
           "label": "C",
           "desc": "A rough timber cabin, door hanging open. The inside is dim but dry. Gear is stacked against the back wall.",
-          "examine_clue": "You look around inside and find a lantern with oil, climbing gear on a peg, and a raft bundled in the corner. Take what you need.",
+          "examine_clue": "You look around inside and spot a lantern with oil and a bundled raft. It looks usable.",
+          "enter_to": "cabin_interior",
           "pos": [
             9,
             6
@@ -237,10 +227,11 @@
       "id": "riverbank",
       "name": "Riverbank",
       "description": "The path ends at a wide dark river. The current runs fast and cold, and you can feel the spray from here. A rope post on the near bank suggests someone once ran a crossing. The rope is long gone.",
-      "description_with_raft": "You are carrying the raft. The flat rock near the post is a good launch point. The far bank looks reachable from here.",
+      "description_with_raft": "You are carrying the raft. You can push south into the lake channel or follow the river current west toward sea cliffs.",
       "exits": {
         "north": "clearing",
-        "south": "far_shore"
+        "south": "river_lake",
+        "west": "river_run"
       },
       "gather": {
         "stone": 2,
@@ -284,6 +275,111 @@
           "pos": [
             13,
             10
+          ]
+        }
+      ]
+    },
+    {
+      "id": "river_run",
+      "name": "River Run",
+      "description": "You enter a fast river run between cut banks and slick stone. The current drives west toward salt spray and open water.",
+      "description_with_raft": "The raft rides the current cleanly here. East returns to the riverbank launch, west pushes toward the bay mouth.",
+      "exits": {
+        "east": "riverbank",
+        "west": "mountain_pass"
+      },
+      "gather": {
+        "food": 1
+      },
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "gather",
+        "inventory",
+        "take",
+        "examine",
+        "enter",
+        "drop",
+        "read",
+        "use"
+      ],
+      "requires": [
+        {
+          "type": "item",
+          "item": "raft",
+          "amount": 1,
+          "message": "The river run is too strong to enter on foot. You need the raft."
+        }
+      ],
+      "encounters": [],
+      "loot": {},
+      "width": 13,
+      "height": 11,
+      "features": [
+        {
+          "id": "flat_rock",
+          "label": "R",
+          "desc": "A slick shelf of river stone where the water surges past.",
+          "examine_clue": "Scored grooves show repeated raft launches and hard landings.",
+          "pos": [
+            6,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": "river_lake",
+      "name": "River Lake",
+      "description": "The river widens into a wind-cut lake beneath the cave ridge. Dark water rolls west toward the bay. A narrow channel hugs the north bank toward the cave side.",
+      "description_with_raft": "The raft rides low as you pole through the channel. You can track north toward the riverbank, push south toward the far shore, or ride west where the lake spills into the bay.",
+      "exits": {
+        "north": "riverbank",
+        "south": "far_shore"
+      },
+      "gather": {
+        "food": 1
+      },
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "gather",
+        "inventory",
+        "take",
+        "examine",
+        "enter",
+        "drop",
+        "read",
+        "use"
+      ],
+      "requires": [],
+      "encounters": [],
+      "loot": {},
+      "width": 11,
+      "height": 9,
+      "features": [
+        {
+          "id": "lake_channel",
+          "label": "H",
+          "desc": "A narrow channel threads between reeds and shallow bars.",
+          "examine_clue": "The water here is calmer. You can steer north to the riverbank or south toward deeper water.",
+          "pos": [
+            8,
+            3
+          ]
+        },
+        {
+          "id": "jagged_reef",
+          "label": "J",
+          "desc": "Broken rock teeth rise just under the surface where the lake meets the bay pull.",
+          "examine_clue": "Sharp ridges below the waterline. Keep the raft clear of this section.",
+          "pos": [
+            3,
+            6
           ]
         }
       ]
@@ -337,6 +433,137 @@
             10,
             5
           ]
+        },
+        {
+          "id": "cave_tunnel",
+          "label": "U",
+          "desc": "A narrow tunnel opens behind a curtain of hanging roots in the center of the cave.",
+          "examine_clue": "Cold air moves through the tunnel. It leads into a deeper chamber.",
+          "enter_to": "cave_chamber",
+          "pos": [
+            6,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cabin_interior",
+      "name": "Cabin Interior",
+      "description": "You step fully inside the cabin. Dust hangs in the air and old boards creak under your boots. A lit-ready lantern hangs by the door, a bundled raft rests near the bunk, and climbing gear is coiled beside the worktable.",
+      "exits": {
+        "south": "thick_forest"
+      },
+      "gather": {},
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "inventory",
+        "examine",
+        "enter",
+        "use",
+        "read",
+        "drop"
+      ],
+      "requires": [],
+      "encounters": [],
+      "loot": {
+        "lantern": 1,
+        "raft": 1,
+        "climbing_gear": 1
+      },
+      "width": 13,
+      "height": 9,
+      "features": [
+        {
+          "id": "loft_ladder",
+          "label": "L",
+          "desc": "A narrow ladder leads to a cramped loft above the rafters.",
+          "examine_clue": "From the top rung you can see the forest canopy through gaps in the roof planks.",
+          "pos": [
+            8,
+            2
+          ]
+        },
+        {
+          "id": "cabin_bunk",
+          "label": "B",
+          "desc": "A rough bunk with an old wool blanket and a cracked wooden frame.",
+          "examine_clue": "Whoever slept here left in a hurry. Mud is still dried across the floorboards.",
+          "pos": [
+            4,
+            6
+          ]
+        },
+        {
+          "id": "worktable",
+          "label": "T",
+          "desc": "A scarred table covered with nails, twine, and a stub of candle.",
+          "examine_clue": "Map scraps and rope cuts suggest someone prepared for a fast climb to the cliff.",
+          "pos": [
+            9,
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cave_chamber",
+      "name": "Cave Chamber",
+      "description": "You squeeze through the tunnel into a deeper cave chamber where the ceiling opens high overhead. The stone walls glisten with damp, and your footsteps echo back at you.",
+      "exits": {
+        "west": "cave_entrance"
+      },
+      "gather": {},
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "inventory",
+        "examine",
+        "enter",
+        "use",
+        "read",
+        "drop"
+      ],
+      "requires": [],
+      "encounters": [],
+      "loot": {},
+      "width": 13,
+      "height": 9,
+      "features": [
+        {
+          "id": "stone_column",
+          "label": "C",
+          "desc": "A smooth stone column rises from floor to ceiling near the center of the chamber.",
+          "examine_clue": "Drip marks carve pale lines down the rock. Water has flowed here for years.",
+          "pos": [
+            6,
+            4
+          ]
+        },
+        {
+          "id": "echo_pool",
+          "label": "O",
+          "desc": "A shallow pool mirrors the lantern light in broken ripples.",
+          "examine_clue": "The water is clear and cold. Tiny white fish dart away from your shadow.",
+          "pos": [
+            9,
+            6
+          ]
+        },
+        {
+          "id": "chamber_ledge",
+          "label": "G",
+          "desc": "A narrow ledge circles part of the wall beneath the cave roof.",
+          "examine_clue": "Wind-shaped soot marks this ledge. Whoever camped here stripped the useful gear and moved on.",
+          "pos": [
+            3,
+            2
+          ]
         }
       ]
     },
@@ -345,7 +572,7 @@
       "name": "Far Shore",
       "description": "The far bank. Dense reeds and dark mud. Something is half-buried in the silt, but you cannot make it out in the dark. You will need to come back better prepared.",
       "exits": {
-        "north": "riverbank"
+        "north": "river_lake"
       },
       "gather": {},
       "actions": [
@@ -371,9 +598,10 @@
     {
       "id": "mountain_pass",
       "name": "Mountain Pass",
-      "description": "You climb onto a broad cliff shelf of weathered grey stone. The lighthouse stands ahead on high ground, white tower against dark sky. Its heavy door is half open. To the west, a blue bay opens into the ocean below the cliffs.",
+      "description": "You climb onto a broad cliff shelf of weathered grey stone. Sea spray hangs in the air. The lighthouse rises from a narrow crown of rock with water on three sides, white tower cut against the dark sky. Its heavy door stands half open.",
       "exits": {
-        "east": "clearing"
+        "east": "clearing",
+        "west": "river_lake"
       },
       "gather": {
         "stone": 1
@@ -400,8 +628,8 @@
       ],
       "encounters": [],
       "loot": {},
-      "width": 13,
-      "height": 11,
+      "width": 17,
+      "height": 13,
       "features": [
         {
           "id": "lighthouse",
@@ -410,8 +638,8 @@
           "examine_clue": "The lantern room still has dry fuel and a striker. This is the signal point the note described.",
           "enter_to": "lighthouse_interior",
           "pos": [
-            6,
-            2
+            8,
+            5
           ]
         },
         {
@@ -423,13 +651,23 @@
             3,
             7
           ]
+        },
+        {
+          "id": "tide_pool",
+          "label": "P",
+          "desc": "A saltwater pool trapped in the rock reflects the lighthouse beam housing above.",
+          "examine_clue": "Broken shell and wet rope fibers. Rescue crews used this ledge before.",
+          "pos": [
+            10,
+            8
+          ]
         }
       ]
     },
     {
       "id": "lighthouse_interior",
       "name": "Lighthouse Interior",
-      "description": "You step into the lighthouse and pull the door shut against the wind. A spiral iron staircase winds upward into the dark lantern room.",
+      "description": "You step into the lighthouse and pull the door shut against the wind. Damp stone walls rise in a tall cylinder around you. A spiral iron stair circles upward toward the lantern room, with old equipment bolted to the lower walls.",
       "exits": {
         "south": "mountain_pass"
       },
@@ -449,6 +687,8 @@
       "requires": [],
       "encounters": [],
       "loot": {},
+      "width": 15,
+      "height": 11,
       "features": [
         {
           "id": "spiral_stairs",
@@ -457,8 +697,38 @@
           "examine_clue": "The top platform holds the signal lens and brazier. One more climb and you can send a distress signal.",
           "enter_to": "lighthouse_top",
           "pos": [
-            0,
-            0
+            7,
+            4
+          ]
+        },
+        {
+          "id": "fogged_window",
+          "label": "W",
+          "desc": "A narrow window slit looks out over black water and white spray.",
+          "examine_clue": "From here you can see surf wrapping around the base of the tower.",
+          "pos": [
+            7,
+            1
+          ]
+        },
+        {
+          "id": "maintenance_locker",
+          "label": "K",
+          "desc": "A steel locker is fixed to the wall beside old maintenance notes.",
+          "examine_clue": "Inside: spare wick rope and lens cloth, all dry and ready for signal duty.",
+          "pos": [
+            3,
+            8
+          ]
+        },
+        {
+          "id": "winch_console",
+          "label": "C",
+          "desc": "A rusted console links to shutters and vent chains higher in the tower.",
+          "examine_clue": "The mechanisms still move. Whoever left this place kept it ready for one last emergency.",
+          "pos": [
+            11,
+            8
           ]
         }
       ]
@@ -466,7 +736,8 @@
     {
       "id": "lighthouse_top",
       "name": "Lantern Room",
-      "description": "You reach the top beneath thick glass panes. A cold brazier sits below the lighthouse lens, and the old shutters still move on their gears.",
+      "description": "You emerge into a wide lantern room ringed by thick glass panes. Rain spatters the windows while waves break far below. A cold brazier sits beneath the giant lens, and the shutter controls are still connected.",
+      "description_with_lantern": "Lantern light glints off brass gears and glass. Every part of the beacon is visible now: the brazier, lens track, shutter crank, and the signal lever beside the catwalk hatch.",
       "exits": {
         "south": "lighthouse_interior"
       },
@@ -486,25 +757,57 @@
       "requires": [],
       "encounters": [],
       "loot": {},
+      "width": 17,
+      "height": 11,
       "features": [
-        {
-          "id": "signal_brazier",
-          "label": "B",
-          "desc": "A wide brass brazier packed with dry fuel and wick rope.",
-          "examine_clue": "Everything is ready. Light it and signal three long, three short, three long flashes: SOS.",
-          "pos": [
-            0,
-            0
-          ]
-        },
         {
           "id": "signal_lens",
           "label": "L",
           "desc": "The lighthouse lens towers over you, polished and waiting.",
           "examine_clue": "With the fire lit, this lens will throw a bright SOS beam across the bay and out to sea.",
           "pos": [
-            0,
-            0
+            8,
+            1
+          ]
+        },
+        {
+          "id": "signal_brazier",
+          "label": "B",
+          "desc": "A wide brass brazier packed with dry fuel and wick rope.",
+          "examine_clue": "Everything is ready. Light it and signal three long, three short, three long flashes: SOS.",
+          "pos": [
+            8,
+            5
+          ]
+        },
+        {
+          "id": "shutter_crank",
+          "label": "C",
+          "desc": "A heavy crank wheel opens and closes the lens shutters.",
+          "examine_clue": "The wheel turns smoothly enough for a coded signal pattern.",
+          "pos": [
+            13,
+            5
+          ]
+        },
+        {
+          "id": "signal_lever",
+          "label": "V",
+          "desc": "A brass lever controls the rotating lens carriage.",
+          "examine_clue": "Set to free-rotate and the beam will sweep the bay once the brazier is lit.",
+          "pos": [
+            8,
+            8
+          ]
+        },
+        {
+          "id": "catwalk_hatch",
+          "label": "R",
+          "desc": "A hatch opens to a narrow outer catwalk circling the lantern glass.",
+          "examine_clue": "Outside, black water surrounds the rock below the tower. Any ship offshore would see your signal.",
+          "pos": [
+            3,
+            9
           ]
         }
       ]

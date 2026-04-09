@@ -18,4 +18,4 @@ env/
 .idea/
 
 # Logs
-*.log
+*.logdata/savegame.json

@@ -145,13 +145,14 @@ class TestLantern:
         self._give_lantern(gs)
         gs.player.torch_uses = 1
         result = gs._tick_torch()
-        assert any("dies" in l.lower() or "darkness" in l.lower() for l in result)
+        assert any("relight" in l.lower() or "reserve oil" in l.lower() for l in result)
+        assert gs.player.torch_uses == gs.item_registry["lantern"]["uses"]
 
-    def test_lantern_removed_from_inventory_on_burnout(self, gs):
+    def test_lantern_stays_in_inventory_on_burnout(self, gs):
         self._give_lantern(gs)
         gs.player.torch_uses = 1
         gs._tick_torch()
-        assert gs.player.inventory.get("lantern", 0) == 0
+        assert gs.player.inventory.get("lantern", 0) == 1
 
     def test_no_tick_without_lantern(self, gs):
         result = gs._tick_torch()
@@ -172,14 +173,15 @@ class TestHiddenLoot:
     def test_raft_hidden_in_thick_forest(self, gs):
         assert "raft" not in gs.rooms["thick_forest"].visible_loot()
 
-    def test_climbing_gear_hidden_in_thick_forest(self, gs):
+    def test_climbing_gear_not_in_thick_forest(self, gs):
         assert "climbing_gear" not in gs.rooms["thick_forest"].visible_loot()
 
-    def test_both_revealed_by_examine_cabin(self, gs):
+    def test_cabin_interior_has_visible_lantern_and_raft(self, gs):
         teleport(gs, "thick_forest")
-        gs.process_command("examine", "cabin")
-        assert "lantern" in gs.rooms["thick_forest"].visible_loot()
-        assert "raft" in gs.rooms["thick_forest"].visible_loot()
+        gs.process_command("enter", "cabin")
+        assert gs.current_room_id == "cabin_interior"
+        assert "lantern" in gs.rooms["cabin_interior"].visible_loot()
+        assert "raft" in gs.rooms["cabin_interior"].visible_loot()
 
     def test_examine_cabin_message_mentions_lantern(self, gs):
         teleport(gs, "thick_forest")
@@ -193,21 +195,20 @@ class TestHiddenLoot:
 
     def test_lantern_takeable_after_reveal(self, gs):
         teleport(gs, "thick_forest")
-        gs.process_command("examine", "cabin")
+        gs.process_command("enter", "cabin")
         gs.process_command("take", "lantern")
         assert gs.player.inventory.get("lantern", 0) == 1
 
-    def test_climbing_gear_takeable_after_reveal(self, gs):
-        teleport(gs, "thick_forest")
-        gs.process_command("examine", "cabin")
-        gs.process_command("take", "climbing_gear")
+    def test_climbing_gear_takeable_in_cabin_interior(self, gs):
+        teleport(gs, "cabin_interior")
+        result = gs.process_command("take", "climbing_gear")
         assert gs.player.inventory.get("climbing_gear", 0) == 1
 
-    def test_enter_cabin_reveals_hidden_loot(self, gs):
+    def test_enter_cabin_moves_to_interior_with_loot(self, gs):
         teleport(gs, "thick_forest")
         gs.process_command("enter", "cabin")
-        assert "lantern" in gs.rooms["thick_forest"].visible_loot()
-        assert "climbing_gear" in gs.rooms["thick_forest"].visible_loot()
+        assert gs.current_room_id == "cabin_interior"
+        assert "lantern" in gs.rooms["cabin_interior"].visible_loot()
 
     def test_raft_not_takeable_before_reveal(self, gs):
         teleport(gs, "thick_forest")
@@ -364,25 +365,65 @@ class TestPuzzleFlows:
         gs.process_command("go", "east")
         assert gs.current_room_id == "cave_entrance"
 
-    def test_river_blocked_without_raft(self, gs):
+    def test_river_lake_walkable_without_raft(self, gs):
         teleport(gs, "riverbank")
         at_edge(gs, "south")
+        gs.process_command("go", "south")
+        assert gs.current_room_id == "river_lake"
+
+    def test_riverbank_west_stays_in_room(self, gs):
+        teleport(gs, "riverbank")
+        x_before = gs.local_x
+        y_before = gs.local_y
+        result = gs.process_command("go", "west")
+        assert gs.current_room_id == "riverbank"
+        assert gs.local_x == x_before - 1
+        assert gs.local_y == y_before
+        assert any("move west" in l.lower() for l in result)
+
+    def test_far_shore_still_blocked_without_raft(self, gs):
+        teleport(gs, "river_lake")
+        at_edge(gs, "south")
         result = gs.process_command("go", "south")
+        assert gs.current_room_id == "river_lake"
         assert any("raft" in l.lower() for l in result)
+
+    def test_riverbank_west_to_river_run_requires_raft(self, gs):
+        teleport(gs, "riverbank")
+        at_edge(gs, "west")
+        result = gs.process_command("go", "west")
+        assert gs.current_room_id == "riverbank"
+        assert any("raft" in l.lower() for l in result)
+
+    def test_riverbank_west_to_river_run_with_raft(self, gs):
+        gs.player.inventory["raft"] = 1
+        teleport(gs, "riverbank")
+        at_edge(gs, "west")
+        gs.process_command("go", "west")
+        assert gs.current_room_id == "river_run"
+
+    def test_river_run_west_to_mountain_pass_with_raft(self, gs):
+        gs.player.inventory["raft"] = 1
+        teleport(gs, "river_run")
+        at_edge(gs, "west")
+        gs.process_command("go", "west")
+        assert gs.current_room_id == "mountain_pass"
 
     def test_raft_found_in_cabin(self, gs):
         teleport(gs, "thick_forest")
-        gs.process_command("examine", "cabin")
-        assert "raft" in gs.rooms["thick_forest"].visible_loot()
+        gs.process_command("enter", "cabin")
+        assert "raft" in gs.rooms["cabin_interior"].visible_loot()
 
     def test_climbing_gear_found_in_cabin(self, gs):
-        teleport(gs, "thick_forest")
-        gs.process_command("examine", "cabin")
-        assert "climbing_gear" in gs.rooms["thick_forest"].visible_loot()
+        teleport(gs, "cabin_interior")
+        assert "climbing_gear" in gs.rooms["cabin_interior"].visible_loot()
 
     def test_raft_unlocks_far_shore(self, gs):
         gs.player.inventory["raft"] = 1
         teleport(gs, "riverbank")
+        at_edge(gs, "south")
+        gs.process_command("go", "south")
+        assert gs.current_room_id == "river_lake"
         at_edge(gs, "south")
         gs.process_command("go", "south")
         assert gs.current_room_id == "far_shore"
@@ -405,12 +446,13 @@ class TestPuzzleFlows:
         result = gs.process_command("use", "lantern")
         assert gs.current_room_id == "cave_entrance"
 
-    def test_use_raft_crosses_river(self, gs):
+    def test_use_raft_prepares_navigation(self, gs):
         gs.player.inventory["raft"] = 1
         teleport(gs, "riverbank")
         at_edge(gs, "south")
         result = gs.process_command("use", "raft")
-        assert gs.current_room_id == "far_shore"
+        assert gs.current_room_id == "riverbank"
+        assert any("go north" in l.lower() or "go south" in l.lower() for l in result)
 
     def test_old_map_in_cave(self, gs):
         assert gs.rooms["cave_entrance"].loot.get("old_map", 0) == 1
@@ -421,15 +463,19 @@ class TestPuzzleFlows:
         at_edge(gs2, "north")
         gs2.process_command("go", "north")
         assert gs2.current_room_id == "thick_forest"
-        gs2.process_command("examine", "cabin")
+        gs2.process_command("enter", "cabin")
         gs2.process_command("take", "lantern")
         gs2.process_command("take", "raft")
+        gs2.process_command("take", "climbing_gear")
         teleport(gs2, "clearing")
         at_edge(gs2, "east")
         gs2.process_command("go", "east")
         assert gs2.current_room_id == "cave_entrance"
         gs2.process_command("take", "old_map")
         assert gs2.player.inventory.get("old_map", 0) == 1
+        gs2.process_command("enter", "cave")
+        assert gs2.current_room_id == "cave_chamber"
+        assert gs2.player.inventory.get("climbing_gear", 0) == 1
 
 
 class TestLighthouseWinCondition:
@@ -449,3 +495,5 @@ class TestLighthouseWinCondition:
         full = " ".join(result).lower()
         assert "sos" in full
         assert gs.is_running is False
+        assert gs.game_outcome == "won"
+        assert gs.end_lines

@@ -30,9 +30,9 @@ def test_snapshot_restores_room_loot_visibility():
     gs.local_y = 0
     gs.process_command("go", "north")
     gs.process_command("enter", "cabin")
-    assert "lantern" in gs.rooms["thick_forest"].visible_loot()
+    assert "lantern" in gs.rooms["cabin_interior"].visible_loot()
 
     snap = gs.snapshot()
     restored = GameState()
     assert restored.apply_snapshot(snap) is True
-    assert "lantern" in restored.rooms["thick_forest"].visible_loot()
+    assert "lantern" in restored.rooms["cabin_interior"].visible_loot()

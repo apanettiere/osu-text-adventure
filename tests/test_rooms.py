@@ -299,17 +299,24 @@ class TestLootInRooms:
         state = build_state()
         assert "raft" not in state.rooms["thick_forest"].visible_loot()
 
-    def test_lantern_revealed_by_examining_cabin(self):
+    def test_lantern_visible_in_cabin_interior(self):
         state = build_state()
+        state.player.inventory["machete"] = 1
         state.current_room_id = "thick_forest"
-        state.process_command("examine", "cabin")
-        assert "lantern" in state.rooms["thick_forest"].visible_loot()
+        state.process_command("enter", "cabin")
+        assert "lantern" in state.rooms["cabin_interior"].visible_loot()
 
-    def test_raft_revealed_by_examining_cabin(self):
+    def test_raft_visible_in_cabin_interior(self):
         state = build_state()
+        state.player.inventory["machete"] = 1
         state.current_room_id = "thick_forest"
-        state.process_command("examine", "cabin")
-        assert "raft" in state.rooms["thick_forest"].visible_loot()
+        state.process_command("enter", "cabin")
+        assert "raft" in state.rooms["cabin_interior"].visible_loot()
+
+    def test_climbing_gear_visible_in_cabin_interior(self):
+        state = build_state()
+        state.current_room_id = "cabin_interior"
+        assert "climbing_gear" in state.rooms["cabin_interior"].visible_loot()
 
     def test_old_map_in_cave_loot(self):
         state = build_state()

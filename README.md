@@ -21,8 +21,8 @@ python pygame_main.py
 - `riverbank` (south) -> cross to `far_shore` with `raft`
 - `cave_entrance` (east) -> requires `lantern`, includes `old_map` and cave painting clue
 - `mountain_pass` (west) -> requires `climbing_gear`, enter lighthouse from here
-- `lighthouse_interior` -> climb spiral stairs to the top
-- `lighthouse_top` -> light the beacon (`use lantern` or `light lighthouse light`) to win
+- `lighthouse_interior` -> expanded tower base with staircase and equipment
+- `lighthouse_top` -> expanded lantern room where you light the beacon (`use lantern` or `light lighthouse light`) to win
 
 ### Controls
 - Movement: Arrow keys, or `go north/south/east/west` (shortcuts `n/s/e/w`)
@@ -46,6 +46,7 @@ python pygame_main.py
 4. Go south to riverbank and cross with raft
 5. Go west from clearing and enter mountain pass with climbing gear
 6. `enter lighthouse`, `enter top`, then `light lighthouse light` to finish
+7. A dedicated SOS rescue victory screen appears before returning to menu
 
 ## Project Structure
 
