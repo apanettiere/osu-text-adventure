@@ -22,6 +22,21 @@
       "type": "crafted",
       "desc": "Logs lashed together with rope. Unwieldy, but it will float."
     },
+    "spear": {
+      "weight": 4,
+      "type": "crafted",
+      "desc": "A sharpened pole tipped with chipped stone. Crude, but combat-ready."
+    },
+    "axe": {
+      "weight": 5,
+      "type": "crafted",
+      "desc": "A rough hand axe with a stone head. Good for chopping and defense."
+    },
+    "knife": {
+      "weight": 2,
+      "type": "crafted",
+      "desc": "A small stone knife with a wrapped wood handle. Light and quick."
+    },
     "note": {
       "weight": 0,
       "type": "readable",
@@ -50,7 +65,26 @@
       "desc": "Berries, bark, whatever you can find."
     }
   },
-  "recipes": {},
+  "recipes": {
+    "knife": {
+      "requires": {
+        "wood": 1,
+        "stone": 1
+      }
+    },
+    "spear": {
+      "requires": {
+        "wood": 2,
+        "stone": 1
+      }
+    },
+    "axe": {
+      "requires": {
+        "wood": 2,
+        "stone": 2
+      }
+    }
+  },
   "combine_recipes": {},
   "old_map_text": [
     "Drawn in rough strokes on oilskin. Hard to read in the dark.",

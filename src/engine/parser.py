@@ -33,6 +33,9 @@ SINGLE_ALIASES = {
     "?": ("help", None),
     "hint": ("hint", None),
     "h": ("hint", None),
+    "recipe": ("craft", "list"),
+    "recipes": ("craft", "list"),
+    "crafting": ("craft", "list"),
 }
 
 VERB_ALIASES = {

@@ -28,6 +28,7 @@ python pygame_main.py
 - Movement: Arrow keys, or `go north/south/east/west` (shortcuts `n/s/e/w`)
 - Actions: `look`, `examine <feature>`, `enter <feature>`, `take <item>`, `use <item>`, `read <item>`, `drop <item>`
 - Resources: `gather wood`, `gather stone`, `gather food`
+- Crafting: `craft` or `recipes` to list recipes, then `craft <item>` (for example `craft spear`)
 - UI: `M` map, `I` inventory, `ESC` close map/inventory or return to menu
 - Save: `F5` or type `save`
 

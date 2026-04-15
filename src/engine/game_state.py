@@ -435,7 +435,7 @@ class GameState:
             "Objective: reach the lighthouse top and signal SOS.",
             "Movement: arrow keys or go north/south/east/west (n/s/e/w).",
             "Core commands: look, examine <thing>, enter <feature>, take <item>, use <item>, read <item>, inventory, hint.",
-            "Crafting prep: gather <wood|stone|food>, and drop <item> when you need space.",
+            "Crafting prep: gather <wood|stone|food>, craft or craft list, and drop <item> when you need space.",
             "Map and menus: m opens map, i opens inventory, save or F5 saves now, esc returns to menu.",
             "When you move near an item, chat shows [nearby item] with what it is and how to interact.",
             "Natural input works too: pick up raft, look at rope post, move north, go to cave.",
@@ -796,28 +796,58 @@ class GameState:
                 "It lands on the ground. You can take it again if you change your mind."]
 
 
+    def _format_recipe_requires(self, required: dict) -> str:
+        parts: list[str] = []
+        for ingredient, amount in required.items():
+            parts.append(f"{int(amount)} {ingredient.replace('_', ' ')}")
+        return ", ".join(parts) if parts else "nothing"
+
+    def _crafting_recipe_lines(self) -> list[str]:
+        if not self.recipes:
+            return ["You do not know any recipes yet."]
+        lines = ["Crafting recipes:"]
+        for recipe_name in sorted(self.recipes.keys()):
+            recipe = self.recipes.get(recipe_name, {})
+            requires = recipe.get("requires", {})
+            needs = self._format_recipe_requires(requires)
+            weight = self.item_registry.get(recipe_name, {}).get("weight")
+            weight_suffix = f" | {weight:g} kg" if weight is not None else ""
+            lines.append(f"  {recipe_name.replace('_', ' ')}: {needs}{weight_suffix}")
+        lines.append("Type craft <item>. Example: craft spear")
+        return lines
+
     def handle_craft(self, target) -> list[str]:
-        if not target:
-            return ["Craft what? Example: craft raft"]
+        if not self.recipes:
+            return ["You do not know any recipes yet."]
+        if not target or target in {"list", "recipes", "all", "?"}:
+            return self._crafting_recipe_lines()
+        target = str(target).strip().lower().replace(" ", "_")
         if target not in self.recipes:
-            return [f"You don't know how to craft a {target}."]
+            known = sorted(self.recipes.keys())
+            guess = difflib.get_close_matches(target, known, n=1, cutoff=0.60)
+            if guess:
+                return [f"You don't know how to craft {target.replace('_', ' ')}. Try: craft {guess[0].replace('_', ' ')}."]
+            return [f"You don't know how to craft {target.replace('_', ' ')}.", "Type craft to list recipes."]
         recipe = self.recipes[target]
         required = recipe.get("requires", {})
-        # Check all ingredients first
+        if not required:
+            return [f"The {target.replace('_', ' ')} recipe is missing ingredients data."]
         for ingredient, amount in required.items():
             have = self.player.inventory.get(ingredient, 0)
-            if have < amount:
-                return [f"You need {amount} {ingredient} to craft a {target}. You have {have}."]
-        # Deduct ingredients
+            need = int(amount)
+            if have < need:
+                return [f"You need {need} {ingredient.replace('_', ' ')} to craft {target.replace('_', ' ')}. You have {have}."]
         for ingredient, amount in required.items():
-            self.player.inventory[ingredient] -= amount
-        # Add crafted item
+            self.player.inventory[ingredient] -= int(amount)
         self._add_to_inventory(target, 1)
         item_data = self.item_registry.get(target, {})
         desc = item_data.get("desc", "")
-        lines = [f"You craft a {target}."]
+        lines = [f"You craft {target.replace('_', ' ')}."]
         if desc:
             lines.append(desc)
+        carried = self.player.carried_weight(self.item_registry)
+        limit = self.player.carry_limit(self.item_registry)
+        lines.append(f"Carry weight: {carried:g} / {int(limit)} kg.")
         return lines
 
 

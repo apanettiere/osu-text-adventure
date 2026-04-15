@@ -115,3 +115,9 @@ def test_parse_light_lighthouse_light_phrase():
     verb, target = parse_command("light the lighthouse light")
     assert verb == "use"
     assert target == "lighthouse_light"
+
+
+def test_parse_recipes_alias():
+    verb, target = parse_command("recipes")
+    assert verb == "craft"
+    assert target == "list"
