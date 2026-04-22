@@ -417,7 +417,9 @@ MAP_ROOM_SIZE = {
     "cave_entrance":  (13, 11),
     "cabin_interior": (13,  9),
     "cave_chamber":   (13,  9),
-    "far_shore":      ( 9,  5),
+    "far_shore":      (13,  9),
+    "shed_interior":  ( 9,  7),
+    "open_waters":    (36, 52),
     "mountain_pass":  (17, 13),
     "lighthouse_interior": (15, 11),
     "lighthouse_top":      (17, 11),
@@ -473,6 +475,15 @@ FEATURE_COLORS = {
     "shutter_crank":  (180, 150, 90),
     "signal_lever":   (205, 180, 105),
     "catwalk_hatch":  (165, 150, 130),
+    "tool_shed":      (140, 115, 75),
+    "hook_wall":      (155, 140, 115),
+    "broken_shelf":   (130, 110, 80),
+    "x_marks_spot":   (210, 175, 60),
+    "driftwood_pile": (165, 150, 120),
+    "reed_bank":      (85, 120, 70),
+    "north_island":   (206, 190, 120),
+    "main_island":    (195, 178, 110),
+    "west_isle":      (160, 155, 145),
 }
 
 LIGHTHOUSE_SPRITE = [
@@ -609,6 +620,40 @@ WORKTABLE_SPRITE = [
     (0, -1, "i", (220, 194, 136)),
 ]
 
+CABIN_DOOR_SPRITE = [
+    (0, -1, "_", (150, 124,  90)),
+    (0,  0, "D", (212, 178, 130)),
+]
+
+FIREPLACE_SPRITE = [
+    (0, -1, "_", (140, 120,  96)),
+    (0,  0, "*", (224, 128,  48)),
+    (0,  1, "=", (116, 108,  96)),
+]
+
+SHELVES_SPRITE = [
+    (-1, 0, "_", (170, 142, 106)),
+    ( 0, 0, "_", (170, 142, 106)),
+    (-1, 1, "o", (192, 168,  96)),
+    ( 0, 1, "i", (218, 186, 122)),
+]
+
+RUG_SPRITE = [
+    (-1, 0, "=", (140,  92,  52)),
+    ( 0, 0, "~", (174, 114,  64)),
+    ( 1, 0, "=", (140,  92,  52)),
+]
+
+STORAGE_CHEST_SPRITE = [
+    (0, -1, "_", (140, 110,  72)),
+    (0,  0, "#", (176, 138,  92)),
+]
+
+HANGING_HERBS_SPRITE = [
+    (0, -1, "/", (120,  98,  64)),
+    (0,  0, "y", (132, 158,  86)),
+]
+
 CAVE_TUNNEL_SPRITE = [
     (-1, -1, "/", (150, 158, 168)),
     (0, -1, "-", (154, 162, 170)),
@@ -669,6 +714,12 @@ FEATURE_SPRITES = {
     "loft_ladder": LOFT_LADDER_SPRITE,
     "cabin_bunk": CABIN_BUNK_SPRITE,
     "worktable": WORKTABLE_SPRITE,
+    "cabin_door": CABIN_DOOR_SPRITE,
+    "fireplace": FIREPLACE_SPRITE,
+    "shelves": SHELVES_SPRITE,
+    "rug": RUG_SPRITE,
+    "storage_chest": STORAGE_CHEST_SPRITE,
+    "hanging_herbs": HANGING_HERBS_SPRITE,
     "cave_tunnel": CAVE_TUNNEL_SPRITE,
     "flat_stone": FLAT_STONE_SPRITE,
     "stone_column": STONE_COLUMN_SPRITE,
@@ -694,8 +745,22 @@ REVEAL_RADIUS = 2
 INTERIOR_ONLY_ROOMS = {
     "cabin_interior",
     "cave_chamber",
+    "shed_interior",
     "lighthouse_interior",
     "lighthouse_top",
+}
+
+FOCUSED_INTERIOR_ROOMS = {
+    "cabin_interior",
+    "lighthouse_interior",
+    "lighthouse_top",
+    "cave_entrance",
+    "cave_chamber",
+    "shed_interior",
+}
+
+TRANSPARENT_ROOMS = {
+    "open_waters",
 }
 
 MAP_WIN_COL0, MAP_WIN_ROW0 = 0, 0
@@ -864,14 +929,19 @@ MAP_WIN_COL0, MAP_WIN_ROW0 = _compute_default_map_origin()
 
 MAP_ROOM_BOUNDS = []
 MAP_NON_INTERIOR_BOUNDS = []
+_interior_entries = []
+_overworld_entries = []
 for _rid, (_rx, _ry) in MAP_ROOM_POS.items():
     if _rid not in MAP_ROOM_SIZE:
         continue
     _rw, _rh = MAP_ROOM_SIZE[_rid]
     _entry = (_rid, _rx, _ry, _rw, _rh)
-    MAP_ROOM_BOUNDS.append(_entry)
-    if _rid not in INTERIOR_ONLY_ROOMS:
+    if _rid in INTERIOR_ONLY_ROOMS:
+        _interior_entries.append(_entry)
+    else:
+        _overworld_entries.append(_entry)
         MAP_NON_INTERIOR_BOUNDS.append(_entry)
+MAP_ROOM_BOUNDS = _interior_entries + _overworld_entries
 
 
 def _build_river_samples(path):
@@ -929,15 +999,25 @@ def _room_at_cached(wcol, wrow):
     return None
 
 
-def _room_at(wcol, wrow, rooms):
-    return _room_at_cached(wcol, wrow)
+@lru_cache(maxsize=131072)
+def _overworld_room_at_cached(wcol, wrow):
+    for rid, rx, ry, rw, rh in MAP_NON_INTERIOR_BOUNDS:
+        if rx <= wcol < rx + rw and ry <= wrow < ry + rh:
+            return (rid, wcol - rx, wrow - ry)
+    return None
+
+
+def _room_at(wcol, wrow, rooms, focus_room_id=None):
+    if focus_room_id:
+        return _room_at_cached(wcol, wrow)
+    return _overworld_room_at_cached(wcol, wrow)
 
 
 @lru_cache(maxsize=131072)
 def _in_room_shape(wcol, wrow):
-    # Overworld terrain (water/forest/coast) should ignore hidden interior rooms.
-    # Otherwise interior bounding shapes create visual holes near cabin/lighthouse.
-    for _, rx, ry, rw, rh in MAP_NON_INTERIOR_BOUNDS:
+    for rid, rx, ry, rw, rh in MAP_NON_INTERIOR_BOUNDS:
+        if rid in TRANSPARENT_ROOMS:
+            continue
         if rx <= wcol < rx + rw and ry <= wrow < ry + rh:
             lc = wcol - rx
             lr = wrow - ry
@@ -1439,7 +1519,7 @@ def draw_map_overlay(
     has_lantern = state.player.inventory.get("lantern", 0) > 0
     panoramic_unlocked = any(r in explored or r in discovered for r in ("mountain_pass", "lighthouse_interior", "lighthouse_top"))
     panoramic_view = (not focus_room_id) and (cur_rid in {"mountain_pass", "lighthouse_interior", "lighthouse_top"} or panoramic_unlocked)
-    bay_unlocked = panoramic_view or ("mountain_pass" in discovered) or (has_raft and cur_rid in {"river_run", "river_lake", "far_shore"})
+    bay_unlocked = panoramic_view or ("mountain_pass" in discovered) or (has_raft and cur_rid in {"river_run", "river_lake", "far_shore"}) or cur_rid == "open_waters"
     mountain_unlocked = panoramic_view or any(
         rid in discovered or rid in explored
         for rid in ("mountain_pass", "lighthouse_interior", "lighthouse_top")
@@ -1538,6 +1618,8 @@ def draw_map_overlay(
         focus_bg_col = (12, 30, 42)
     elif focus_room_id in {"cave_entrance", "cave_chamber"}:
         focus_bg_col = (9, 10, 14)
+    elif focus_room_id == "shed_interior":
+        focus_bg_col = (22, 18, 10)
 
     def tchar(lc, lr, rw, rh):
         if (lc in (0,rw-1)) and (lr in (0,rh-1)):
@@ -1566,9 +1648,19 @@ def draw_map_overlay(
     # Fill the map panel background to avoid empty black gutters.
     pygame.draw.rect(screen, (9, 14, 10), (opx, opy, map_px_w, map_px_h))
 
+    focus_bounds = None
+    if focus_room_id and focus_room_id in MAP_ROOM_POS and focus_room_id in MAP_ROOM_SIZE:
+        _frx, _fry = MAP_ROOM_POS[focus_room_id]
+        _frw, _frh = MAP_ROOM_SIZE[focus_room_id]
+        focus_bounds = (_frx, _fry, _frx + _frw, _fry + _frh)
+
     for wrow in range(map_row0, map_row0 + win_rows):
         for wcol in range(map_col0, map_col0 + win_cols):
             tile_visited = panoramic_view or ((wcol, wrow) in visited)
+            if not tile_visited and focus_bounds is not None:
+                fx0, fy0, fx1, fy1 = focus_bounds
+                if fx0 <= wcol < fx1 and fy0 <= wrow < fy1:
+                    tile_visited = True
 
             if not focus_room_id:
                 # Faint terrain noise so the map window never looks like a hard black void.
@@ -1579,8 +1671,10 @@ def draw_map_overlay(
                     elif bg_seed == 1:
                         put(wcol, wrow, "'", (12, 18, 13))
 
-            room_info = _room_at(wcol, wrow, rooms)
-            if room_info and not focus_room_id and room_info[0] in INTERIOR_ONLY_ROOMS:
+            room_info = _room_at(wcol, wrow, rooms, focus_room_id)
+            transparent_room_info = None
+            if room_info and room_info[0] in TRANSPARENT_ROOMS:
+                transparent_room_info = room_info
                 room_info = None
             if room_info:
                 rid, lc, lr = room_info
@@ -1716,7 +1810,7 @@ def draw_map_overlay(
                             put(wcol, wrow, "'", C["lantern_glow_dim"])
 
                     # Raft marker: stable orange/white square around player on water routes.
-                    water_nav_room = rid in {"riverbank", "river_run", "river_lake", "far_shore"}
+                    water_nav_room = rid in {"river_run", "river_lake", "far_shore", "open_waters"}
                     if water_nav_room and is_cur and tile_visited and has_raft and plx is not None and ply is not None:
                         dx = wcol - plx
                         dy = wrow - ply
@@ -1901,13 +1995,80 @@ def draw_map_overlay(
                 ch = FOREST_CHARS_DENSE[seed % len(FOREST_CHARS_DENSE)]
                 put(wcol, wrow, ch, C["cave_forest_dense"] if is_cave_gray else C["forest_dense"])
 
-    # Show raft icon in the west bay/ocean once the player has a raft.
+            if transparent_room_info:
+                trid, tlc, tlr = transparent_room_info
+                trw, trh = MAP_ROOM_SIZE.get(trid, (1, 1))
+                tzone = _ellipse_zone(tlc, tlr, trw, trh)
+                if tzone != "outside":
+                    t_is_cur = (trid == cur_rid)
+                    t_actual_exp = trid in explored
+                    if t_actual_exp and tzone == "inside":
+                        room = rooms.get(trid)
+                        if room:
+                            for feat in room.features:
+                                feat_id = feat.get("id", "")
+                                fx, fy = feat.get("pos", (-1, -1))
+                                if fx == tlc and fy == tlr and tile_visited:
+                                    fcol = FEATURE_COLORS.get(feat_id, C["feature"])
+                                    put(wcol, wrow, feat.get("label", "?"), fcol)
+                            visible = room.visible_loot()
+                            if visible:
+                                item_list = list(visible.keys())
+                                half = len(item_list) // 2
+                                item_row = trh // 2 + 2
+                                for ii, item_name in enumerate(item_list):
+                                    ix = trw // 2 + ii - half
+                                    if tlc == ix and tlr == item_row and tile_visited:
+                                        item_info = state.game_data.get("items", {}).get(item_name, {})
+                                        itype = item_info.get("type", "")
+                                        icol = ITEM_MAP_COLORS.get(itype, (200, 180, 80))
+                                        put(wcol, wrow, item_name[0].upper(), icol)
+                    if t_is_cur and wcol == plx and wrow == ply:
+                        put(wcol, wrow, "@", C["player"])
+
+    if cur_rid in TRANSPARENT_ROOMS and cur_rid in MAP_ROOM_POS and cur_rid in MAP_ROOM_SIZE and not focus_room_id:
+        trid = cur_rid
+        trx, try_row = MAP_ROOM_POS[trid]
+        trw, trh = MAP_ROOM_SIZE[trid]
+        t_room = rooms.get(trid)
+        if t_room:
+            for feat in t_room.features:
+                fx, fy = feat.get("pos", (-1, -1))
+                wcol = trx + fx
+                wrow = try_row + fy
+                if panoramic_view or (wcol, wrow) in visited:
+                    fcol = FEATURE_COLORS.get(feat.get("id", ""), C["feature"])
+                    put(wcol, wrow, feat.get("label", "?"), fcol)
+            visible = t_room.visible_loot()
+            if visible:
+                item_list = list(visible.keys())
+                half = len(item_list) // 2
+                item_row = trh // 2 + 2
+                for ii, item_name in enumerate(item_list):
+                    ix = trw // 2 + ii - half
+                    wcol = trx + ix
+                    wrow = try_row + item_row
+                    if panoramic_view or (wcol, wrow) in visited:
+                        item_info = state.game_data.get("items", {}).get(item_name, {})
+                        itype = item_info.get("type", "")
+                        icol = ITEM_MAP_COLORS.get(itype, (200, 180, 80))
+                        put(wcol, wrow, item_name[0].upper(), icol)
+        if plx is not None and ply is not None:
+            put(plx, ply, "@", C["player"])
+
     if has_raft and not focus_room_id and bay_unlocked:
         ax, ay = RAFT_OCEAN_SPRITE_ANCHOR
         for dx, dy, ch, col in RAFT_OCEAN_SPRITE:
             tx = ax + dx
             ty = ay + dy
             if _is_bay_tile(tx, ty) and not _is_island_tile(tx, ty):
+                put(tx, ty, ch, col)
+        if cur_rid == "open_waters" and plx is not None and ply is not None:
+            for dx, dy, ch, col in RAFT_OCEAN_SPRITE:
+                tx = plx + dx
+                ty = ply + dy
+                if tx == plx and ty == ply:
+                    continue
                 put(tx, ty, ch, col)
 
     if show_legend:
@@ -1919,8 +2080,11 @@ def draw_map_overlay(
 
 def draw_map_screen(screen, font_mt, font_mb, font_in, state, input_text, cursor_idx, cursor_on, last_cmd, last_response):
     screen.fill((9, 11, 8))
-    # Keep a continuous world map view so all regions feel connected.
-    focus_room_id = None
+    focus_room_id = (
+        state.current_room_id
+        if state.current_room_id in FOCUSED_INTERIOR_ROOMS
+        else None
+    )
     draw_map_overlay(screen, font_mt, font_mb, state, focus_room_id=focus_room_id)
     iy = HEIGHT - MAP_INPUT_HEIGHT
     pygame.draw.rect(screen, (26, 32, 22), (0, iy, WIDTH, MAP_INPUT_HEIGHT))

@@ -43,8 +43,8 @@ class TestRoomDimensions:
         for rid in ("clearing", "thick_forest", "riverbank"):
             assert room_map[rid].is_walkable
 
-    def test_far_shore_is_not_walkable(self, room_map):
-        assert not room_map["far_shore"].is_walkable
+    def test_far_shore_is_walkable(self, room_map):
+        assert room_map["far_shore"].is_walkable
 
     def test_mountain_pass_is_walkable(self, room_map):
         assert room_map["mountain_pass"].is_walkable
@@ -69,12 +69,12 @@ class TestRoomFeatures:
         labels = {f["label"] for f in room_map["thick_forest"].features}
         assert labels == {"C", "L"}
 
-    def test_riverbank_has_two_features(self, room_map):
-        assert len(room_map["riverbank"].features) == 2
+    def test_riverbank_has_three_features(self, room_map):
+        assert len(room_map["riverbank"].features) == 3
 
     def test_riverbank_feature_labels(self, room_map):
         labels = {f["label"] for f in room_map["riverbank"].features}
-        assert labels == {"P", "R"}
+        assert labels == {"P", "R", "D"}
 
     def test_all_features_have_desc(self, room_map):
         for rid in ("clearing", "thick_forest", "riverbank", "cave_entrance", "mountain_pass"):
@@ -126,9 +126,8 @@ class TestRoomRequirements:
         items = [r["item"] for r in room_map["cave_entrance"].requires if r.get("type") == "item"]
         assert "lantern" in items
 
-    def test_far_shore_requires_raft(self, room_map):
-        items = [r["item"] for r in room_map["far_shore"].requires if r.get("type") == "item"]
-        assert "raft" in items
+    def test_far_shore_no_requirements(self, room_map):
+        assert room_map["far_shore"].requires == []
 
     def test_mountain_pass_requires_climbing_gear(self, room_map):
         items = [r["item"] for r in room_map["mountain_pass"].requires if r.get("type") == "item"]

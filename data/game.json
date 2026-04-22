@@ -63,6 +63,16 @@
       "weight": 1,
       "type": "resource",
       "desc": "Berries, bark, whatever you can find."
+    },
+    "shovel": {
+      "weight": 3,
+      "type": "tool",
+      "desc": "A short-handled spade with a rusted blade. Still digs fine."
+    },
+    "signal_flare": {
+      "weight": 1,
+      "type": "tool",
+      "desc": "A sealed waterproof flare. Could signal a rescue from anywhere on the island."
     }
   },
   "recipes": {
@@ -260,11 +270,12 @@
     {
       "id": "riverbank",
       "name": "Riverbank",
-      "description": "The path ends at a wide dark river. The current runs fast and cold, and you can feel the spray from here. A rope post on the near bank suggests someone once ran a crossing. The rope is long gone.",
-      "description_with_raft": "You are carrying the raft. You can push south into the lake channel or follow the river current west toward sea cliffs.",
+      "description": "The path ends at a wide dark river. The current runs fast and cold, and you can feel the spray from here. A rope post on the near bank suggests someone once ran a crossing. The rope is long gone. The river widens east into a dark lake, and a muddy shore lies further south along the bank.",
+      "description_with_raft": "You are carrying the raft. You can push east into the lake channel, follow the river current west toward sea cliffs, or drift south along the bank to the far shore.",
       "exits": {
         "north": "clearing",
-        "south": "river_lake",
+        "east": "river_lake",
+        "south": "far_shore",
         "west": "river_run"
       },
       "gather": {
@@ -310,6 +321,17 @@
             13,
             10
           ]
+        },
+        {
+          "id": "tool_shed",
+          "label": "D",
+          "desc": "A leaning tool shed half-hidden by reeds. The door hangs on one hinge.",
+          "examine_clue": "Old fishing line and a rusted shovel inside. The shed looks like it can be entered.",
+          "enter_to": "shed_interior",
+          "pos": [
+            3,
+            3
+          ]
         }
       ]
     },
@@ -317,7 +339,7 @@
       "id": "river_run",
       "name": "River Run",
       "description": "You enter a fast river run between cut banks and slick stone. The current drives west toward salt spray and open water.",
-      "description_with_raft": "The raft rides the current cleanly here. East returns to the riverbank launch, west pushes toward the bay mouth.",
+      "description_with_raft": "The raft rides the current cleanly here. East returns to the riverbank launch and west pushes toward the bay mouth.",
       "exits": {
         "east": "riverbank",
         "west": "mountain_pass"
@@ -339,14 +361,7 @@
         "read",
         "use"
       ],
-      "requires": [
-        {
-          "type": "item",
-          "item": "raft",
-          "amount": 1,
-          "message": "The river run is too strong to enter on foot. You need the raft."
-        }
-      ],
+      "requires": [],
       "encounters": [],
       "loot": {},
       "width": 13,
@@ -367,10 +382,10 @@
     {
       "id": "river_lake",
       "name": "River Lake",
-      "description": "The river widens into a wind-cut lake beneath the cave ridge. Dark water rolls west toward the bay. A narrow channel hugs the north bank toward the cave side.",
-      "description_with_raft": "The raft rides low as you pole through the channel. You can track north toward the riverbank, push south toward the far shore, or ride west where the lake spills into the bay.",
+      "description": "The river widens into a wind-cut lake beneath the cave ridge. Dark water rolls west back toward the riverbank. A muddy shore lies further south.",
+      "description_with_raft": "The raft rides low as you pole through the channel. You can track west toward the riverbank or push south toward the far shore.",
       "exits": {
-        "north": "riverbank",
+        "west": "riverbank",
         "south": "far_shore"
       },
       "gather": {
@@ -540,6 +555,116 @@
             9,
             6
           ]
+        },
+        {
+          "id": "cabin_door",
+          "label": "D",
+          "desc": "The cabin's heavy wooden door, latched with a hand-carved peg. Go south to step back into the forest.",
+          "examine_clue": "Claw marks and bark splinters mark the outside of the frame. Wildlife has tested this door more than once.",
+          "pos": [
+            6,
+            7
+          ]
+        },
+        {
+          "id": "fireplace",
+          "label": "F",
+          "desc": "A stone fireplace set into the west wall, with a blackened iron hook for a cook pot.",
+          "examine_clue": "Ash banks are fresh. Whoever kept this cabin warmed themselves here within the last week.",
+          "pos": [
+            3,
+            3
+          ]
+        },
+        {
+          "id": "shelves",
+          "label": "H",
+          "desc": "Rough plank shelves pegged to the wall, mostly bare of stores.",
+          "examine_clue": "A cracked jar of preserved berries and a few bread crumbs. Nothing worth carrying.",
+          "pos": [
+            6,
+            1
+          ]
+        },
+        {
+          "id": "rug",
+          "label": "U",
+          "desc": "A faded wool rug in the centre of the cabin, worn thin where boots have tracked across it.",
+          "examine_clue": "The pattern is hand-woven. Something dark has soaked into one corner and never fully washed out.",
+          "pos": [
+            6,
+            4
+          ]
+        },
+        {
+          "id": "storage_chest",
+          "label": "X",
+          "desc": "A small cedar chest against the east wall, latched with a tarnished brass hook.",
+          "examine_clue": "Inside are folded oilskins and a tin of matches. Someone was ready to leave in a hurry.",
+          "pos": [
+            10,
+            4
+          ]
+        },
+        {
+          "id": "hanging_herbs",
+          "label": "Y",
+          "desc": "Bundles of dried herbs hang from a rafter hook — rosemary, thyme, something sharper beneath.",
+          "examine_clue": "The cuttings are fresh enough that they still release scent when brushed. Harvested within the week.",
+          "pos": [
+            4,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shed_interior",
+      "name": "Tool Shed",
+      "description": "A cramped shed that smells of damp wood and fish oil. Hooks line one wall and a rusted shovel leans against a broken shelf. Nets hang from the low ceiling.",
+      "exits": {
+        "south": "riverbank"
+      },
+      "gather": {},
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "inventory",
+        "examine",
+        "take",
+        "drop",
+        "read",
+        "use"
+      ],
+      "requires": [],
+      "encounters": [],
+      "loot": {
+        "shovel": 1
+      },
+      "width": 9,
+      "height": 7,
+      "features": [
+        {
+          "id": "hook_wall",
+          "label": "H",
+          "desc": "Rusty hooks driven into the planks. Old fishing line hangs from a few of them.",
+          "examine_clue": "A faded tag on one hook reads FAR BANK - DIG SITE. Someone planned to come back.",
+          "pos": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "broken_shelf",
+          "label": "S",
+          "desc": "A shelf sagging under the weight of old jars and a coil of wire.",
+          "examine_clue": "One jar holds lamp oil. The rest are empty or cracked.",
+          "pos": [
+            6,
+            4
+          ]
         }
       ]
     },
@@ -604,30 +729,142 @@
     {
       "id": "far_shore",
       "name": "Far Shore",
-      "description": "The far bank. Dense reeds and dark mud. Something is half-buried in the silt, but you cannot make it out in the dark. You will need to come back better prepared.",
+      "description": "You drag the raft onto a muddy bank overgrown with reeds. The air smells of salt and rotting wood. Driftwood is piled against a fallen trunk. Scattered islands rise from the open waters to the west.",
       "exits": {
-        "north": "river_lake"
+        "north": "river_lake",
+        "west": "open_waters"
       },
-      "gather": {},
+      "gather": {
+        "wood": 1,
+        "food": 1
+      },
       "actions": [
         "look",
         "help",
         "hint",
         "go",
+        "gather",
         "inventory",
+        "take",
+        "craft",
+        "examine",
+        "enter",
+        "drop",
         "read",
-        "drop"
+        "use"
       ],
-      "requires": [
-        {
-          "type": "item",
-          "item": "raft",
-          "amount": 1,
-          "message": "The river is too fast and wide to cross. You need a raft."
-        }
-      ],
+      "requires": [],
       "encounters": [],
-      "loot": {}
+      "loot": {},
+      "width": 13,
+      "height": 9,
+      "features": [
+        {
+          "id": "driftwood_pile",
+          "label": "W",
+          "desc": "A tangle of bleached driftwood washed up against a fallen trunk.",
+          "examine_clue": "Salt-cured timber. Some pieces are lashed together with old rope, as if part of a raft that broke apart.",
+          "pos": [
+            10,
+            7
+          ]
+        },
+        {
+          "id": "reed_bank",
+          "label": "R",
+          "desc": "Tall reeds line the waterline, swaying in the current.",
+          "examine_clue": "Boot prints in the mud between the reeds. Someone came ashore here before you.",
+          "pos": [
+            3,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open_waters",
+      "name": "Open Waters",
+      "description": "Wind-swept ocean stretches out before you. Waves roll across dark water under a grey sky. Scattered islands rise from the shallows, some ringed with sandy beaches, others thick with low scrub. Driftwood and broken coral line the shore edges. The lighthouse cliff rises to the east, and a muddy far shore lies to the south.",
+      "description_with_shovel": "You can see the marked stone on the southern island from here. The shovel should make short work of whatever is buried there.",
+      "exits": {
+        "east": "mountain_pass",
+        "south": "far_shore"
+      },
+      "gather": {
+        "food": 2,
+        "wood": 1
+      },
+      "actions": [
+        "look",
+        "help",
+        "hint",
+        "go",
+        "gather",
+        "inventory",
+        "take",
+        "craft",
+        "examine",
+        "enter",
+        "drop",
+        "read",
+        "use",
+        "dig"
+      ],
+      "requires": [],
+      "encounters": [],
+      "loot": {
+        "signal_flare": 1
+      },
+      "loot_hidden": {
+        "signal_flare": true
+      },
+      "loot_hint": {
+        "signal_flare": "x_marks_spot"
+      },
+      "width": 36,
+      "height": 52,
+      "features": [
+        {
+          "id": "north_island",
+          "label": "I",
+          "desc": "A small island of packed sand and low bushes. Gulls circle overhead.",
+          "examine_clue": "Shell middens and old fire pits. Fishermen camped here once.",
+          "pos": [
+            20,
+            7
+          ]
+        },
+        {
+          "id": "main_island",
+          "label": "M",
+          "desc": "The largest island in the bay. Scrub brush and twisted driftwood cover the interior.",
+          "examine_clue": "Old cargo crates are stacked against a rock wall. Most are empty, but drag marks lead south toward the marked stone.",
+          "pos": [
+            11,
+            21
+          ]
+        },
+        {
+          "id": "x_marks_spot",
+          "label": "X",
+          "desc": "A flat stone with a crude X scratched deep into the surface. The earth around it is loose and uneven.",
+          "examine_clue": "Someone buried something here and marked the spot. You would need a shovel to dig it up.",
+          "pos": [
+            21,
+            37
+          ]
+        },
+        {
+          "id": "west_isle",
+          "label": "W",
+          "desc": "A rocky outcrop barely above the waterline. Waves break across it constantly.",
+          "examine_clue": "Barnacles and kelp cling to every surface. Nothing useful here but the view is wide.",
+          "pos": [
+            4,
+            33
+          ]
+        }
+      ]
     },
     {
       "id": "mountain_pass",
@@ -635,7 +872,7 @@
       "description": "You climb onto a broad cliff shelf of weathered grey stone. Sea spray hangs in the air. The lighthouse rises from a narrow crown of rock with water on three sides, white tower cut against the dark sky. Its heavy door stands half open.",
       "exits": {
         "east": "clearing",
-        "west": "river_lake"
+        "west": "open_waters"
       },
       "gather": {
         "stone": 1

@@ -365,11 +365,12 @@ class TestPuzzleFlows:
         gs.process_command("go", "east")
         assert gs.current_room_id == "cave_entrance"
 
-    def test_river_lake_walkable_without_raft(self, gs):
+    def test_river_lake_blocked_without_raft(self, gs):
         teleport(gs, "riverbank")
-        at_edge(gs, "south")
-        gs.process_command("go", "south")
-        assert gs.current_room_id == "river_lake"
+        at_edge(gs, "east")
+        result = gs.process_command("go", "east")
+        assert gs.current_room_id == "riverbank"
+        assert any("raft" in l.lower() for l in result)
 
     def test_riverbank_west_stays_in_room(self, gs):
         teleport(gs, "riverbank")
@@ -381,14 +382,14 @@ class TestPuzzleFlows:
         assert gs.local_y == y_before
         assert any("move west" in l.lower() for l in result)
 
-    def test_far_shore_still_blocked_without_raft(self, gs):
+    def test_far_shore_accessible_from_river_lake(self, gs):
+        gs.player.inventory["raft"] = 1
         teleport(gs, "river_lake")
         at_edge(gs, "south")
-        result = gs.process_command("go", "south")
-        assert gs.current_room_id == "river_lake"
-        assert any("raft" in l.lower() for l in result)
+        gs.process_command("go", "south")
+        assert gs.current_room_id == "far_shore"
 
-    def test_riverbank_west_to_river_run_requires_raft(self, gs):
+    def test_riverbank_west_to_river_run_blocked_without_raft(self, gs):
         teleport(gs, "riverbank")
         at_edge(gs, "west")
         result = gs.process_command("go", "west")
@@ -421,8 +422,8 @@ class TestPuzzleFlows:
     def test_raft_unlocks_far_shore(self, gs):
         gs.player.inventory["raft"] = 1
         teleport(gs, "riverbank")
-        at_edge(gs, "south")
-        gs.process_command("go", "south")
+        at_edge(gs, "east")
+        gs.process_command("go", "east")
         assert gs.current_room_id == "river_lake"
         at_edge(gs, "south")
         gs.process_command("go", "south")

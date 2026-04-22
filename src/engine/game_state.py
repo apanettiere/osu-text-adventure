@@ -24,9 +24,11 @@ MAP_ROOM_POS: dict[str, tuple[int,int]] = {
     "river_run":      (8, 25),
     "river_lake":     (52, 30),
     "cave_entrance":  (33, 16),
-    "cabin_interior": (38, -2),
+    "cabin_interior": (16, -2),
     "cave_chamber":   (37, 7),
     "far_shore":      (21, 47),
+    "shed_interior":  (14, 34),
+    "open_waters":    (-35, 2),
     "mountain_pass":  (-2, 16),
     "lighthouse_interior": (-1, 5),
     "lighthouse_top":      (-2, -6),
@@ -43,6 +45,8 @@ ENTER_TARGET_ALIASES: dict[str, str] = {
     "cave": "cave_tunnel",
     "tunnel": "cave_tunnel",
     "chamber": "cave_tunnel",
+    "shed": "tool_shed",
+    "tool_shed": "tool_shed",
 }
 
 
@@ -413,6 +417,14 @@ class GameState:
             if inv.get("raft", 0) <= 0:
                 return "Hint: move north back to riverbank. South opens into deeper water and needs the raft."
             return "Hint: move north to riverbank or south across deep water to the far shore."
+        if room.id == "far_shore":
+            return "Hint: this muddy shore is a dead end. Head back west to the open waters to explore the islands."
+        if room.id == "open_waters":
+            if inv.get("shovel", 0) > 0:
+                return "Hint: find the X marks the spot on the southern island and dig."
+            return "Hint: explore the islands. The X marks buried treasure. You need a shovel from the tool shed at the riverbank."
+        if room.id == "shed_interior":
+            return "Hint: take the shovel here, then raft west through the river to the open waters and dig at the X on the southern island."
         if room.id == "mountain_pass":
             return "Hint: enter lighthouse, then climb to the top and light the signal."
         if room.id == "lighthouse_interior":
@@ -426,7 +438,7 @@ class GameState:
             return "You cannot go that way."
         if room.id in {"cave_entrance", "cave_chamber"}:
             return "Stone walls close in. You cannot go that way."
-        if room.id in {"riverbank", "river_run", "river_lake", "far_shore"}:
+        if room.id in {"riverbank", "river_run", "river_lake", "far_shore", "open_waters"}:
             return "Water blocks that route. You cannot go that way."
         return "The trees press in close. You cannot go that way."
 
@@ -435,7 +447,7 @@ class GameState:
             "Objective: reach the lighthouse top and signal SOS.",
             "Movement: arrow keys or go north/south/east/west (n/s/e/w).",
             "Core commands: look, examine <thing>, enter <feature>, take <item>, use <item>, read <item>, inventory, hint.",
-            "Crafting prep: gather <wood|stone|food>, craft or craft list, and drop <item> when you need space.",
+            "Crafting prep: gather <wood|stone|food>, craft or craft list, drop <item> when you need space, and dig when you have a shovel.",
             "Map and menus: m opens map, i opens inventory, save or F5 saves now, esc returns to menu.",
             "When you move near an item, chat shows [nearby item] with what it is and how to interact.",
             "Natural input works too: pick up raft, look at rope post, move north, go to cave.",
@@ -532,7 +544,7 @@ class GameState:
         if room.id == "clearing" and raw_target in {"cave", "cave_entrance", "cave_tunnel", "tunnel", "chamber"}:
             return self._move_to_room_from_feature("cave_entrance")
         target = self._resolve_enter_target(target)
-        if room.id in {"riverbank", "river_lake", "far_shore", "mountain_pass"} and target in {"river", "water", "lake", "channel", "bay", "sea", "ocean"}:
+        if room.id in {"riverbank", "river_lake", "far_shore", "mountain_pass", "open_waters"} and target in {"river", "water", "lake", "channel", "bay", "sea", "ocean"}:
             if target in {"bay", "sea", "ocean"} and self.player.inventory.get("raft", 0) <= 0:
                 return ["That water is deep. You need the raft for open water crossings."]
             if self.player.inventory.get("raft", 0) > 0:
@@ -563,7 +575,18 @@ class GameState:
     def process_command(self, verb: str, target) -> list[str]:
         if not self.is_running:
             return []
-        if verb in ("quit", "exit"):
+        if verb == "leave":
+            return self.handle_leave()
+        if verb == "exit":
+            if self.current_room_id and self.current_room_id.endswith("_interior"):
+                room = self.get_current_room()
+                if room and room.exits:
+                    return self.handle_leave()
+            self.game_outcome = "quit"
+            self.end_lines = ["Goodbye."]
+            self.is_running = False
+            return ["Goodbye."]
+        if verb == "quit":
             self.game_outcome = "quit"
             self.end_lines = ["Goodbye."]
             self.is_running = False
@@ -596,11 +619,14 @@ class GameState:
             return self.handle_read(target)
         if verb == "use":
             return self.handle_use(target)
+        if verb == "dig":
+            return self.handle_use("shovel")
         if verb == "combine":
             return self.handle_combine(target)
         known = [
             "look", "help", "hint", "go", "gather", "take", "craft",
-            "examine", "enter", "drop", "read", "use", "combine", "inventory", "quit",
+            "examine", "enter", "drop", "read", "use", "combine", "inventory", "quit", "dig",
+            "leave", "exit",
         ]
         guess = difflib.get_close_matches(verb, known, n=1, cutoff=0.60)
         if guess:
@@ -612,6 +638,27 @@ class GameState:
             f"Unknown command: {verb}.",
             "Type help for controls and examples.",
         ]
+
+
+    def handle_leave(self) -> list[str]:
+        room = self.get_current_room()
+        if not room:
+            return ["Error: current room not found."]
+        if not room.exits:
+            return ["There is no obvious way out from here."]
+        exits = list(room.exits.items())
+        if len(exits) == 1:
+            direction, _ = exits[0]
+            if room.is_walkable and direction in ENTRY_SPAWN:
+                lx, ly = ENTRY_SPAWN[direction](room.width, room.height)
+                if   direction == "north": self.local_y = 0
+                elif direction == "south": self.local_y = room.height - 1
+                elif direction == "east":  self.local_x = room.width - 1
+                elif direction == "west":  self.local_x = 0
+                self._mark_visited()
+            return self.handle_go(direction)
+        dirs = ", ".join(sorted(room.exits.keys()))
+        return [f"Leave which way? Available exits: {dirs}."]
 
 
     def handle_go(self, target) -> list[str]:
@@ -661,15 +708,28 @@ class GameState:
 
         dest_room = self.rooms.get(next_room_id)
 
-        # Water approach to mountain pass is a separate route from the cliff climb.
-        # Keep climbing gear required from the forest side, but require raft from lake side.
+        WATER_ROOMS = {"river_run", "river_lake", "far_shore", "open_waters"}
+
         water_to_pass = (
             next_room_id == "mountain_pass"
-            and self.current_room_id in {"river_lake", "far_shore", "river_run"}
+            and self.current_room_id in WATER_ROOMS
         )
-        if water_to_pass and self.player.inventory.get("raft", 0) <= 0:
-            self.player.discovered_rooms.add(next_room_id)
-            return ["The bay current is too deep and rough here. You need the raft to head west."]
+        if water_to_pass:
+            has_raft = self.player.inventory.get("raft", 0) > 0
+            has_gear = self.player.inventory.get("climbing_gear", 0) > 0
+            if not has_raft and not has_gear:
+                self.player.discovered_rooms.add(next_room_id)
+                return ["The bay current is too deep and rough here. You need the raft to head west."]
+
+        entering_water_from_land = (
+            next_room_id in WATER_ROOMS
+            and self.current_room_id not in WATER_ROOMS
+        )
+        if entering_water_from_land:
+            has_raft = self.player.inventory.get("raft", 0) > 0
+            if not has_raft:
+                self.player.discovered_rooms.add(next_room_id)
+                return ["The water runs fast and deep. You need the raft to cross."]
 
         blocked = None if water_to_pass else self._requirement_block_message(dest_room)
         if blocked:
@@ -679,10 +739,22 @@ class GameState:
         self.player.current_pos = (nx, ny)
         self.player.discovered_rooms.add(next_room_id)
         self.player.explored_rooms.add(next_room_id)
+        source_room_id = self.current_room_id
         self.current_room_id = next_room_id
 
         dest = self.rooms[next_room_id]
-        self.local_x, self.local_y = ENTRY_SPAWN[target](dest.width, dest.height)
+        spawn_override = None
+        for feat in getattr(dest, "features", []):
+            if feat.get("enter_to") == source_room_id:
+                fx, fy = feat.get("pos", (0, 0))
+                sy = min(int(fy) + 1, dest.height - 1)
+                sx = max(0, min(int(fx), dest.width - 1))
+                spawn_override = (sx, sy)
+                break
+        if spawn_override is not None:
+            self.local_x, self.local_y = spawn_override
+        else:
+            self.local_x, self.local_y = ENTRY_SPAWN[target](dest.width, dest.height)
         self._mark_visited()
         return self.describe_current_room()
 
@@ -884,8 +956,29 @@ class GameState:
         if win_lines is not None:
             return win_lines
 
+        if target == "shovel" and self.player.inventory.get("shovel", 0) <= 0:
+            return ["You don't have a shovel. There might be one in the tool shed by the riverbank."]
         if self.player.inventory.get(target, 0) <= 0:
             return [f"You are not carrying a {target.replace('_', ' ')}."]
+
+        if target == "shovel" and room.id == "open_waters":
+            revealed = room.reveal_loot_for_feature("x_marks_spot")
+            if revealed:
+                lines = [
+                    "You drive the shovel into the loose earth beside the marked stone.",
+                    "After a few minutes of digging, the blade hits something solid.",
+                    "You pull a waterproof case from the mud and crack it open.",
+                ]
+                for item in revealed:
+                    item_data = self.item_registry.get(item, {})
+                    desc = item_data.get("desc", "")
+                    lines.append(f"Inside: a {item.replace('_', ' ')}. {desc}")
+                    lines.append(f"Type  take {item.replace('_', ' ')}  to pick it up.")
+                return lines
+            if room.loot.get("signal_flare", 0) <= 0 and self.player.inventory.get("signal_flare", 0) > 0:
+                return ["You already dug up what was buried here."]
+            return ["You dig around the marked spot but find nothing else."]
+
         _use_messages: dict[str, str] = {
             "raft":          "You pull the raft into position and steady it for deeper crossings.",
             "machete":       "You raise the machete and hack through the tangled brambles. Thorns tear your sleeves but you force a path through.",
@@ -893,7 +986,7 @@ class GameState:
             "axe":           "You swing into the dense undergrowth, each stroke cutting a few feet more. The dark closes in but you keep chopping.",
         }
 
-        raft_nav_rooms = {"riverbank", "river_lake", "far_shore", "mountain_pass"}
+        raft_nav_rooms = {"riverbank", "river_lake", "far_shore", "mountain_pass", "open_waters"}
 
         if target == "raft" and room.id in raft_nav_rooms:
             return [
