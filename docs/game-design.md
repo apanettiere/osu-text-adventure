@@ -36,7 +36,7 @@ The parser reads the first word as the action and the second word as the target.
 
 **Full verb list:**
 
-look, go, gather, take, craft, examine, enter, drop, read, use, dig, combine, inventory, leave, exit, quit, help, hint.
+look, go, gather, take, craft, examine, enter, drop, read, use, dig, combine, eat, inventory, status, save, leave, exit, quit, help, hint.
 
 **Shortcuts supported:**
 
@@ -67,9 +67,9 @@ The game repeats a simple loop:
 
 The world is a single unified world map stitched together from three kinds of rooms:
 
-* **Walkable overworld rooms** — traversed tile by tile, spawning at the opposite wall when entering from an exit direction.
-* **Focused interior rooms** — one-room "focus" views centered on the screen, entered through a feature (`enter cabin`, `enter lighthouse`, etc.).
-* **Water rooms** — raft-only zones drawn on top of procedural water (the bay and open ocean).
+* **Walkable overworld rooms** - traversed tile by tile, spawning at the opposite wall when entering from an exit direction.
+* **Focused interior rooms** - one-room "focus" views centered on the screen, entered through a feature (`enter cabin`, `enter lighthouse`, etc.).
+* **Water rooms** - raft-only zones drawn on top of procedural water (the bay and open ocean).
 
 | Room | Size | Kind | Description |
 |---|---|---|---|
@@ -109,21 +109,21 @@ Each room contains positioned features. Walking adjacent to a feature displays a
 
 **Forest Clearing:** stump (S), firepit (F), trail marker (T)
 
-**Thick Forest:** cabin (C) — enters cabin interior, fallen tree (L)
+**Thick Forest:** cabin (C) - enters cabin interior, fallen tree (L)
 
-**Riverbank:** rope post (P), flat rock (R), tool shed (D) — enters shed interior
+**Riverbank:** rope post (P), flat rock (R), tool shed (D) - enters shed interior
 
 **Cabin Interior:** loft ladder (L), bunk (B), worktable (T), door (D), fireplace (F), shelves (H), rug (U), storage chest (X), hanging herbs (Y)
 
-**Cave Entrance:** flat stone (X), cave tunnel (U) — enters cave chamber
+**Cave Entrance:** flat stone (X), cave tunnel (U) - enters cave chamber
 
 **Cave Chamber:** stone column (C), echo pool (O), chamber ledge (G)
 
 **Tool Shed:** hook wall (H), broken shelf (S)
 
-**Mountain Pass:** lighthouse (H) — enters lighthouse interior, cliff edge (E), tide pool (P)
+**Mountain Pass:** lighthouse (H) - enters lighthouse interior, cliff edge (E), tide pool (P)
 
-**Lighthouse Interior:** spiral stairs (S) — enters lantern room, fogged window (W), maintenance locker (K), winch console (C)
+**Lighthouse Interior:** spiral stairs (S) - enters lantern room, fogged window (W), maintenance locker (K), winch console (C)
 
 **Lantern Room:** signal lens (L), signal brazier (B), shutter crank (C), signal lever (V), catwalk hatch (R)
 
@@ -151,8 +151,8 @@ All room data is loaded from a JSON file (`data/game.json`). Each room entry may
 
 The map is a single unified world revealed tile by tile as the player explores. The render has two modes:
 
-* **Continuous overworld** — the forest, riverbank, river, bay, and cave entrance are drawn as one world grid. Obstacle art (`~~~` water, `###` bramble, `^^^` cliff, `|!|` deep woods) fills the gaps between regions.
-* **Focused interior** — when the player enters the cabin, tool shed, cave chamber, lighthouse, or mountain pass, the view switches to a single-room focus centered on screen with its own background tint. Interior features and sprites are revealed immediately inside the room so the art is never hidden by fog.
+* **Continuous overworld** - the forest, riverbank, river, bay, and cave entrance are drawn as one world grid. Obstacle art (`~~~` water, `###` bramble, `^^^` cliff, `|!|` deep woods) fills the gaps between regions.
+* **Focused interior** - when the player enters the cabin, tool shed, cave chamber, lighthouse, or mountain pass, the view switches to a single-room focus centered on screen with its own background tint. Interior features and sprites are revealed immediately inside the room so the art is never hidden by fog.
 
 Interior rooms that sit geometrically *inside* an overworld room (the cabin sits inside thick forest's bounds; the shed sits inside the riverbank) are layered carefully: in focus mode the interior wins tile ownership, so the cabin renders correctly; on the overworld the outer room wins, so the cabin exterior feature stays visible on the forest map.
 
@@ -199,9 +199,9 @@ Exit openings in the treeline show as `.` gaps where paths connect.
 
 The player can gather three resources:
 
-* Wood — clearing, thick forest, far shore, open waters (driftwood from islands)
-* Stone — clearing, riverbank, cave entrance, mountain pass
-* Food — clearing, riverbank, river run, river lake, far shore, open waters
+* Wood - clearing, thick forest, far shore, open waters (driftwood from islands)
+* Stone - clearing, riverbank, cave entrance, mountain pass
+* Food - clearing, riverbank, river run, river lake, far shore, open waters
 
 Resources are stored as counters in the player inventory.
 
@@ -225,9 +225,11 @@ Resources are stored as counters in the player inventory.
 
 `craft` opens the crafting flow, `craft list` shows recipes, and `craft <item>` attempts a specific recipe. Crafted outputs respect inventory weight: if the player is overencumbered, the craft still consumes inputs but drops the result in the current room for later pickup. The shortlist:
 
-* **Knife** — 1 wood + 1 stone
-* **Spear** — 2 wood + 1 stone
-* **Axe** — 2 wood + 2 stone
+* **Knife** - 1 wood + 1 stone
+* **Spear** - 2 wood + 1 stone
+* **Axe** - 2 wood + 2 stone
+* **Torch** - 1 wood + 1 food (provides light in dark areas)
+* **Raft** - 4 wood + 1 stone (alternative to cabin loot)
 
 ## Win Condition
 
@@ -238,7 +240,7 @@ The player must:
 * gather wood and stone, craft a spear/axe/knife for confidence
 * find the machete in the clearing
 * enter the cabin in the thick forest for the lantern, climbing gear, and raft
-* reach the mountain pass — either by climbing (climbing gear) or by water (raft across the bay)
+* reach the mountain pass - either by climbing (climbing gear) or by water (raft across the bay)
 * enter the lighthouse, climb the spiral stairs, and fire the signal (`use lantern`, `use torch`, `use lever`, `use brazier`, `light signal`, or similar verbs all work at the lantern room)
 
 Optional side objective: the tool shed at the riverbank holds a shovel. Rafting west through the open waters, the player can `dig` at the X on the main island to uncover a signal flare.
@@ -255,7 +257,7 @@ The game uses:
 * Classes for rooms and player state (`Room`, `Player`, `GameState`)
 * Save/load support so a session can be resumed
 * A main game loop to process user input
-* Unit tests using pytest (211 passing)
+* Unit tests using pytest (271 passing)
 
 ### Project Structure
 

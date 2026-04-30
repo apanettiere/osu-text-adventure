@@ -73,6 +73,12 @@
       "weight": 1,
       "type": "tool",
       "desc": "A sealed waterproof flare. Could signal a rescue from anywhere on the island."
+    },
+    "torch": {
+      "weight": 1,
+      "type": "tool",
+      "desc": "A branch wrapped with dry moss and resin. Burns steadily.",
+      "uses": 15
     }
   },
   "recipes": {
@@ -92,6 +98,18 @@
       "requires": {
         "wood": 2,
         "stone": 2
+      }
+    },
+    "torch": {
+      "requires": {
+        "wood": 1,
+        "food": 1
+      }
+    },
+    "raft": {
+      "requires": {
+        "wood": 4,
+        "stone": 1
       }
     }
   },
@@ -609,7 +627,7 @@
         {
           "id": "hanging_herbs",
           "label": "Y",
-          "desc": "Bundles of dried herbs hang from a rafter hook — rosemary, thyme, something sharper beneath.",
+          "desc": "Bundles of dried herbs hang from a rafter hook - rosemary, thyme, something sharper beneath.",
           "examine_clue": "The cuttings are fresh enough that they still release scent when brushed. Harvested within the week.",
           "pos": [
             4,

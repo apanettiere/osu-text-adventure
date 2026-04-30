@@ -828,14 +828,14 @@ MOUNTAIN_HIGHLAND_PATCHES = [
     (81.5, 15.8, 7.8, 6.0),   # narrowed right flank
     (84.2, 22.4, 5.8, 4.8),   # narrowed to taper the lower-right
     (87.0, 16.8, 4.0, 3.6),   # much narrower upper-right shoulder
-    (85.8, 11.4, 3.4, 2.8),   # tight top-right patch — forms the peak corner
+    (85.8, 11.4, 3.4, 2.8),   # tight top-right patch - forms the peak corner
 ]
 
 MOUNTAIN_PEAK_PATCHES = [
     (70.8, 6.3, 6.6, 4.6),
     (77.8, 7.6, 5.4, 3.8),   # slightly narrowed
     (83.4, 9.0, 3.6, 2.8),   # tight right-shoulder peak
-    # far-right wide patch removed — replaced by a descending ridge line below
+    # far-right wide patch removed - replaced by a descending ridge line below
 ]
 
 MOUNTAIN_RIDGE_LINES = [
@@ -920,7 +920,7 @@ def _compute_default_map_origin() -> tuple[int, int]:
     if min_col > max_col or min_row > max_row:
         return 0, 0
 
-    center_col = (min_col + max_col) // 2
+    center_col = (min_col + max_col) // 2 - 4
     center_row = (min_row + max_row) // 2
     return center_col - MAP_WIN_COLS // 2, center_row - MAP_WIN_ROWS // 2
 

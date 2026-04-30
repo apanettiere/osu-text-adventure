@@ -447,9 +447,9 @@ class GameState:
             "Objective: reach the lighthouse top and signal SOS.",
             "Movement: arrow keys or go north/south/east/west (n/s/e/w).",
             "Core commands: look, examine <thing>, enter <feature>, take <item>, use <item>, read <item>, inventory, hint.",
+            "Survival: eat (consume food to heal), status (check HP and weight).",
             "Crafting prep: gather <wood|stone|food>, craft or craft list, drop <item> when you need space, and dig when you have a shovel.",
             "Map and menus: m opens map, i opens inventory, save or F5 saves now, esc returns to menu.",
-            "When you move near an item, chat shows [nearby item] with what it is and how to interact.",
             "Natural input works too: pick up raft, look at rope post, move north, go to cave.",
         ]
 
@@ -465,6 +465,8 @@ class GameState:
     def _resolve_enter_target(self, target: str) -> str:
         return ENTER_TARGET_ALIASES.get(target, target)
 
+    LIGHT_SOURCES = {"lantern", "torch"}
+
     def _requirement_block_message(self, room) -> str | None:
         if not room or not room.requires:
             return None
@@ -473,8 +475,12 @@ class GameState:
                 continue
             item = req.get("item")
             amount = int(req.get("amount", 1))
-            if int(self.player.inventory.get(item, 0)) < amount:
-                return req.get("message", "You cannot go there yet.")
+            if int(self.player.inventory.get(item, 0)) >= amount:
+                continue
+            if item in self.LIGHT_SOURCES:
+                if any(int(self.player.inventory.get(alt, 0)) >= amount for alt in self.LIGHT_SOURCES):
+                    continue
+            return req.get("message", "You cannot go there yet.")
         return None
 
     def _move_to_room_from_feature(self, next_room_id: str) -> list[str]:
@@ -623,10 +629,16 @@ class GameState:
             return self.handle_use("shovel")
         if verb == "combine":
             return self.handle_combine(target)
+        if verb == "eat":
+            return self.handle_eat(target)
+        if verb == "save":
+            return self.handle_save()
+        if verb == "status":
+            return self.handle_status()
         known = [
             "look", "help", "hint", "go", "gather", "take", "craft",
             "examine", "enter", "drop", "read", "use", "combine", "inventory", "quit", "dig",
-            "leave", "exit",
+            "leave", "exit", "eat", "save", "status",
         ]
         guess = difflib.get_close_matches(verb, known, n=1, cutoff=0.60)
         if guess:
@@ -904,11 +916,14 @@ class GameState:
         required = recipe.get("requires", {})
         if not required:
             return [f"The {target.replace('_', ' ')} recipe is missing ingredients data."]
+        missing: list[str] = []
         for ingredient, amount in required.items():
             have = self.player.inventory.get(ingredient, 0)
             need = int(amount)
             if have < need:
-                return [f"You need {need} {ingredient.replace('_', ' ')} to craft {target.replace('_', ' ')}. You have {have}."]
+                missing.append(f"{need} {ingredient.replace('_', ' ')} (have {have})")
+        if missing:
+            return [f"Cannot craft {target.replace('_', ' ')}. You need: {', '.join(missing)}."]
         for ingredient, amount in required.items():
             self.player.inventory[ingredient] -= int(amount)
         self._add_to_inventory(target, 1)
@@ -1077,6 +1092,41 @@ class GameState:
         lines.append(f"You now have: {result.replace('_',' ')}.")
         return lines
 
+
+    def handle_eat(self, target) -> list[str]:
+        if not target:
+            target = "food"
+        if target != "food":
+            return [f"You cannot eat the {target.replace('_', ' ')}."]
+        count = self.player.inventory.get("food", 0)
+        if count <= 0:
+            return ["You have no food. Gather some first."]
+        self.player.inventory["food"] -= 1
+        healed = min(5, self.player.max_hp - self.player.hp)
+        self.player.hp = min(self.player.max_hp, self.player.hp + 5)
+        lines = ["You eat some foraged food."]
+        if healed > 0:
+            lines.append(f"You recover {healed} HP. ({self.player.hp}/{self.player.max_hp})")
+        else:
+            lines.append(f"You feel satisfied. ({self.player.hp}/{self.player.max_hp})")
+        return lines
+
+    def handle_save(self) -> list[str]:
+        return ["Game saved."]
+
+    def handle_status(self) -> list[str]:
+        room = self.get_current_room()
+        room_name = room.name if room else "Unknown"
+        registry = getattr(self, "item_registry", {})
+        carried = self.player.carried_weight(registry)
+        limit = self.player.carry_limit(registry)
+        return [
+            f"\nStatus:",
+            f"  Location: {room_name}",
+            f"  HP: {self.player.hp}/{self.player.max_hp}",
+            f"  Carry weight: {carried:g}/{int(limit)} kg",
+            f"  Rooms explored: {len(self.player.explored_rooms)}",
+        ]
 
     def _tick_torch(self) -> list[str]:
         light_item = None
