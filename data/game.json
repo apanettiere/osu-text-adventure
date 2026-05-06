@@ -113,6 +113,35 @@
       }
     }
   },
+  "weapon_damage": {
+    "knife": 4,
+    "spear": 5,
+    "axe": 6,
+    "machete": 3
+  },
+  "enemies": {
+    "feral_boar": {
+      "name": "a feral boar",
+      "desc": "a feral boar charges from the undergrowth, tusks lowered.",
+      "hp": 8,
+      "damage": 3,
+      "symbol": "B"
+    },
+    "snarling_wolf": {
+      "name": "a snarling wolf",
+      "desc": "a snarling wolf stalks out from the reeds by the river, teeth bared.",
+      "hp": 10,
+      "damage": 4,
+      "symbol": "W"
+    },
+    "gaunt_man": {
+      "name": "a gaunt man",
+      "desc": "a gaunt man descends the spiral stairs, a crazed look in his eye.",
+      "hp": 12,
+      "damage": 5,
+      "symbol": "M"
+    }
+  },
   "combine_recipes": {},
   "old_map_text": [
     "Drawn in rough strokes on oilskin. Hard to read in the dark.",
@@ -255,7 +284,7 @@
           "message": "Dense brambles tear at you. You need a machete to cut through."
         }
       ],
-      "encounters": [],
+      "encounters": ["feral_boar"],
       "loot": {},
       "loot_hidden": {},
       "loot_hint": {},
@@ -315,7 +344,7 @@
         "use"
       ],
       "requires": [],
-      "encounters": [],
+      "encounters": ["snarling_wolf"],
       "loot": {},
       "width": 17,
       "height": 13,
@@ -974,7 +1003,7 @@
         "drop"
       ],
       "requires": [],
-      "encounters": [],
+      "encounters": ["gaunt_man"],
       "loot": {},
       "width": 15,
       "height": 11,

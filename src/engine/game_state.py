@@ -13,6 +13,7 @@ from engine.constants import (
 from engine.movement import MovementMixin
 from engine.commands import CommandsMixin
 from engine.save import SaveMixin
+from engine.combat import CombatState
 
 
 class GameState(CommandsMixin, MovementMixin, SaveMixin):
@@ -28,6 +29,9 @@ class GameState(CommandsMixin, MovementMixin, SaveMixin):
         self.is_running = True
         self.game_outcome: str | None = None
         self.end_lines: list[str] = []
+        self.combat: CombatState | None = None
+        self.enemies: dict = self.game_data.get("enemies", {})
+        self.weapon_damage: dict = self.game_data.get("weapon_damage", {})
 
         if self.current_room_id not in self.rooms:
             self.is_running = False
@@ -88,6 +92,33 @@ class GameState(CommandsMixin, MovementMixin, SaveMixin):
 
     def _add_to_inventory(self, item: str, count: int = 1):
         self.player.inventory[item] = self.player.inventory.get(item, 0) + count
+
+    def check_encounter(self) -> CombatState | None:
+        room = self.get_current_room()
+        if not room or not room.encounters:
+            return None
+        for enemy_id in room.encounters:
+            key = f"{self.current_room_id}:{enemy_id}"
+            if key in self.player.defeated_enemies:
+                continue
+            enemy_data = self.enemies.get(enemy_id)
+            if not enemy_data:
+                continue
+            self.combat = CombatState(enemy_id, enemy_data, self.weapon_damage)
+            return self.combat
+        return None
+
+    def finish_combat(self):
+        if not self.combat:
+            return
+        if self.combat.player_won:
+            key = f"{self.current_room_id}:{self.combat.enemy_id}"
+            self.player.defeated_enemies.add(key)
+        if not self.combat.player_won and not self.combat.player_fled:
+            self.game_outcome = "died"
+            self.end_lines = ["You have been defeated."]
+            self.is_running = False
+        self.combat = None
 
     def get_intro_lines(self) -> list[str]:
         return list(self.game_data.get("intro_text", []))
