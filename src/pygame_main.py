@@ -299,9 +299,53 @@ def run_victory_screen(screen, clock, state):
         pygame.display.flip()
 
 
+def run_defeat_screen(screen, clock):
+    ft = pygame.font.SysFont("Courier New", 48, bold=True)
+    fs = pygame.font.SysFont("Courier New", 22)
+    fb = pygame.font.SysFont(None, 28, bold=True)
+    ff = pygame.font.SysFont(None, 20)
+    br = pygame.Rect(0, 0, 250, 48)
+    br.center = (WIDTH // 2, HEIGHT // 2 + 80)
+
+    lines = [
+        "your vision darkens.",
+        "the cold ground presses against your face.",
+        "you will not be getting up.",
+    ]
+
+    while True:
+        clock.tick(FPS)
+        mp = pygame.mouse.get_pos()
+        bh = point_in_rect(mp, br)
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                return
+            if ev.type == pygame.KEYDOWN and ev.key in (pygame.K_RETURN, pygame.K_ESCAPE, pygame.K_SPACE):
+                return
+            if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1 and bh:
+                return
+
+        screen.fill((8, 6, 6))
+        title = ft.render("YOU DIED", True, (180, 50, 50))
+        screen.blit(title, title.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100)))
+
+        y = HEIGHT // 2 - 30
+        for ln in lines:
+            surf = fs.render(ln, True, (130, 120, 120))
+            screen.blit(surf, surf.get_rect(center=(WIDTH // 2, y)))
+            y += 30
+
+        draw_button(screen, br, "Return to Menu", fb, bh)
+        foot = ff.render("ENTER / SPACE / ESC to continue", True, (80, 70, 70))
+        screen.blit(foot, foot.get_rect(center=(WIDTH // 2, HEIGHT - 24)))
+        pygame.display.flip()
+
+
 def _finish_after_game_end(screen, clock, state):
     if getattr(state, "game_outcome", None) == "won":
         run_victory_screen(screen, clock, state)
+    elif getattr(state, "game_outcome", None) == "died":
+        run_defeat_screen(screen, clock)
     clear_game_state()
     return "menu", None
 
@@ -2296,18 +2340,122 @@ ARROW_DIRS = {
 }
 
 
+_combat_fonts = {}
+
+def _get_combat_fonts():
+    if not _combat_fonts:
+        _combat_fonts["title"] = pygame.font.SysFont("Courier New", 38, bold=True)
+        _combat_fonts["desc"] = pygame.font.SysFont("Courier New", 20)
+        _combat_fonts["hp"] = pygame.font.SysFont("Courier New", 36, bold=True)
+        _combat_fonts["sym"] = pygame.font.SysFont("Courier New", 48, bold=True)
+        _combat_fonts["btn"] = pygame.font.SysFont("Courier New", 20, bold=True)
+        _combat_fonts["log"] = pygame.font.SysFont("Courier New", 18)
+        _combat_fonts["hint"] = pygame.font.SysFont(None, 19)
+    return _combat_fonts
+
+
+def draw_combat_screen(screen, state, combat_log, btn_hovered):
+    combat = state.combat
+    if not combat:
+        return {}
+
+    screen.fill((12, 12, 12))
+
+    fonts = _get_combat_fonts()
+    f_title = fonts["title"]
+    f_desc = fonts["desc"]
+    f_hp = fonts["hp"]
+    f_sym = fonts["sym"]
+    f_btn = fonts["btn"]
+    f_log = fonts["log"]
+    f_hint = fonts["hint"]
+
+    title = f_title.render(combat.enemy_name, True, (220, 220, 220))
+    screen.blit(title, title.get_rect(center=(WIDTH // 2, 60)))
+
+    desc = f_desc.render(combat.enemy_desc, True, (160, 160, 160))
+    screen.blit(desc, desc.get_rect(center=(WIDTH // 2, 105)))
+
+    pygame.draw.line(screen, (40, 40, 40), (80, 140), (WIDTH - 80, 140), 1)
+
+    mid = WIDTH // 2
+    left_x = mid // 2
+    right_x = mid + mid // 2
+
+    # Player side
+    p_hp_text = f"{state.player.hp}/{state.player.max_hp} hp"
+    p_hp = f_hp.render(p_hp_text, True, (200, 200, 200))
+    screen.blit(p_hp, p_hp.get_rect(center=(left_x, 195)))
+
+    p_sym = f_sym.render("@", True, (220, 220, 220))
+    screen.blit(p_sym, p_sym.get_rect(center=(left_x, 260)))
+
+    # Enemy side
+    e_hp_text = f"{combat.enemy_hp}/{combat.enemy_max_hp} hp"
+    e_hp = f_hp.render(e_hp_text, True, (200, 200, 200))
+    screen.blit(e_hp, e_hp.get_rect(center=(right_x, 195)))
+
+    e_sym = f_sym.render(combat.enemy_symbol, True, (220, 220, 220))
+    screen.blit(e_sym, e_sym.get_rect(center=(right_x, 260)))
+
+    # Divider
+    pygame.draw.line(screen, (40, 40, 40), (mid, 160), (mid, 310), 1)
+
+    # Combat log
+    log_y = 330
+    pygame.draw.line(screen, (40, 40, 40), (80, log_y - 10), (WIDTH - 80, log_y - 10), 1)
+    visible_log = combat_log[-6:]
+    for line in visible_log:
+        surf = f_log.render(line, True, (140, 140, 140))
+        screen.blit(surf, surf.get_rect(center=(WIDTH // 2, log_y)))
+        log_y += 22
+
+    # Buttons
+    buttons = {}
+    btn_y = HEIGHT - 100
+
+    # Eat button (left)
+    food_count = state.player.inventory.get("food", 0)
+    eat_text = f"+5 hp (food: {food_count})"
+    eat_rect = pygame.Rect(0, 0, 220, 44)
+    eat_rect.center = (left_x, btn_y)
+    eat_enabled = food_count > 0 and state.player.hp < state.player.max_hp
+    draw_button(screen, eat_rect, eat_text, f_btn, btn_hovered == "eat", eat_enabled)
+    buttons["eat"] = (eat_rect, eat_enabled)
+
+    # Attack button (right)
+    weapon, dmg = combat.best_weapon(state.player.inventory)
+    atk_label = weapon.replace("_", " ") if weapon else "punch"
+    atk_rect = pygame.Rect(0, 0, 220, 44)
+    atk_rect.center = (right_x, btn_y)
+    draw_button(screen, atk_rect, atk_label, f_btn, btn_hovered == "attack", True)
+    buttons["attack"] = (atk_rect, True)
+
+    # Flee button (center bottom)
+    flee_rect = pygame.Rect(0, 0, 160, 38)
+    flee_rect.center = (mid, btn_y + 52)
+    draw_button(screen, flee_rect, "flee", f_btn, btn_hovered == "flee", True)
+    buttons["flee"] = (flee_rect, True)
+
+    hint = f_hint.render("A attack    E eat    F flee", True, (65, 65, 65))
+    screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 16)))
+
+    return buttons
+
+
 def _dispatch(cmd, state, log_lines):
+    prev_room = state.current_room_id
     log_lines.append(f"> {cmd}")
     from engine.parser import parse_command
     v, t = parse_command(cmd)
     result = state.process_command(v, t)
     log_lines.extend(result)
-    # Return last meaningful line for the map status bar
+    room_changed = state.current_room_id != prev_room
     for line in reversed(result):
         stripped = line.strip()
         if stripped:
-            return stripped
-    return ""
+            return stripped, room_changed
+    return "", room_changed
 
 
 def _is_save_command(cmd: str) -> bool:
@@ -2358,13 +2506,16 @@ def run_game(screen, clock, state=None):
     input_text = ""
     cursor_idx = 0
     scroll = 0
-    mode          = "game"   # "game" | "map" | "inventory"
+    mode          = "game"   # "game" | "map" | "inventory" | "combat"
     inv_selected  = 0
     inv_detail    = []
     inv_flash     = ""
     inv_flash_t   = 0
     last_cmd      = ""
     last_response = ""   # last game reply shown on map
+    combat_log    = []
+    combat_btn_hovered = ""
+    combat_buttons = {}
 
     while True:
         clock.tick(FPS)
@@ -2376,10 +2527,41 @@ def run_game(screen, clock, state=None):
                 return "quit", state
             if ev.type == pygame.KEYDOWN:
                 if ev.key == pygame.K_ESCAPE:
+                    if mode == "combat":
+                        continue
                     if mode in ("map", "inventory"):
                         mode = "game"; continue
                     save_game_state(state)
                     return "menu", state
+                if mode == "combat":
+                    if ev.key == pygame.K_a:
+                        combat_log.extend(state.combat.player_attack(state.player.inventory))
+                        combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.combat.finished:
+                            state.finish_combat()
+                            if not state.is_running:
+                                return _finish_after_game_end(screen, clock, state)
+                            mode = "game"
+                            log_lines.append("The threat is gone. You steady yourself.")
+                            save_game_state(state)
+                    elif ev.key == pygame.K_e:
+                        combat_log.extend(state.combat.player_eat(state.player))
+                        combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.combat.finished:
+                            state.finish_combat()
+                            if not state.is_running:
+                                return _finish_after_game_end(screen, clock, state)
+                            mode = "game"
+                            save_game_state(state)
+                    elif ev.key == pygame.K_f:
+                        combat_log.extend(state.combat.player_flee(state.player))
+                        state.finish_combat()
+                        if not state.is_running:
+                            return _finish_after_game_end(screen, clock, state)
+                        mode = "game"
+                        log_lines.append("You break away and catch your breath.")
+                        save_game_state(state)
+                    continue
                 if ev.key == pygame.K_F5:
                     save_game_state(state)
                     log_lines.extend(["> save", "Game saved."])
@@ -2431,11 +2613,14 @@ def run_game(screen, clock, state=None):
                         scroll = 0
                         cmd = f"go {ARROW_DIRS[ev.key]}"
                         last_cmd = cmd
-                        last_response = _dispatch(cmd, state, log_lines)
+                        last_response, room_changed = _dispatch(cmd, state, log_lines)
                         if not state.is_running:
                             return _finish_after_game_end(screen, clock, state)
                         save_game_state(state)
                         log_lines = clamp_log(log_lines)
+                        if room_changed and state.check_encounter():
+                            mode = "combat"
+                            combat_log = []
                         continue
 
                     if ev.key == pygame.K_RETURN:
@@ -2451,16 +2636,54 @@ def run_game(screen, clock, state=None):
                                 last_response = "Game saved."
                                 continue
                             last_cmd = cmd
-                            last_response = _dispatch(cmd, state, log_lines)
+                            last_response, room_changed = _dispatch(cmd, state, log_lines)
                             if not state.is_running:
                                 return _finish_after_game_end(screen, clock, state)
                             save_game_state(state)
                             log_lines = clamp_log(log_lines)
+                            if room_changed and state.check_encounter():
+                                mode = "combat"
+                                combat_log = []
                         continue
 
                     edited, input_text, cursor_idx = _edit_input_line(ev, input_text, cursor_idx)
                     if edited:
                         continue
+
+            if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1 and mode == "combat":
+                if state.combat:
+                    action = None
+                    for btn_name, (rect, enabled) in combat_buttons.items():
+                        if enabled and rect.collidepoint(ev.pos):
+                            action = btn_name
+                            break
+                    if action == "attack":
+                        combat_log.extend(state.combat.player_attack(state.player.inventory))
+                        combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.combat.finished:
+                            state.finish_combat()
+                            if not state.is_running:
+                                return _finish_after_game_end(screen, clock, state)
+                            mode = "game"
+                            log_lines.append("The threat is gone. You steady yourself.")
+                            save_game_state(state)
+                    elif action == "eat":
+                        combat_log.extend(state.combat.player_eat(state.player))
+                        combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.combat.finished:
+                            state.finish_combat()
+                            if not state.is_running:
+                                return _finish_after_game_end(screen, clock, state)
+                            mode = "game"
+                            save_game_state(state)
+                    elif action == "flee":
+                        combat_log.extend(state.combat.player_flee(state.player))
+                        state.finish_combat()
+                        if not state.is_running:
+                            return _finish_after_game_end(screen, clock, state)
+                        mode = "game"
+                        log_lines.append("You break away and catch your breath.")
+                        save_game_state(state)
 
             if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1 and mode == "inventory":
                 items_list = state.player.inventory_items()
@@ -2481,7 +2704,18 @@ def run_game(screen, clock, state=None):
         if inv_flash and pygame.time.get_ticks() - inv_flash_t > 2000:
             inv_flash = ""
 
-        if mode == "inventory":
+        # Combat button hover detection
+        if mode == "combat":
+            mp = pygame.mouse.get_pos()
+            combat_btn_hovered = ""
+            for btn_name, (rect, enabled) in combat_buttons.items():
+                if enabled and rect.collidepoint(mp):
+                    combat_btn_hovered = btn_name
+                    break
+
+        if mode == "combat":
+            combat_buttons = draw_combat_screen(screen, state, combat_log, combat_btn_hovered)
+        elif mode == "inventory":
             inv_selected = draw_inventory_screen(screen, state, inv_selected, inv_detail, inv_flash)
         elif mode == "map":
             draw_map_screen(screen, font_mt, font_mb, font, state, input_text, cursor_idx, cursor_on, last_cmd, last_response)

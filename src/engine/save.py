@@ -17,6 +17,8 @@ class SaveMixin:
             "local_x": int(self.local_x),
             "local_y": int(self.local_y),
             "player": {
+                "hp": int(self.player.hp),
+                "max_hp": int(self.player.max_hp),
                 "inventory": {k: int(v) for k, v in self.player.inventory.items() if int(v) > 0},
                 "torch_uses": self.player.torch_uses,
                 "discovered_rooms": sorted(self.player.discovered_rooms),
@@ -27,6 +29,7 @@ class SaveMixin:
                 },
                 "current_pos": [int(self.player.current_pos[0]), int(self.player.current_pos[1])],
                 "visited_runs": encode_visited_tiles(self.player.visited_tiles),
+                "defeated_enemies": sorted(self.player.defeated_enemies),
             },
             "rooms": room_state,
         }
@@ -37,6 +40,8 @@ class SaveMixin:
             if rid not in self.rooms:
                 return False
             p = snap.get("player", {})
+            self.player.hp = int(p.get("hp", self.player.max_hp))
+            self.player.max_hp = int(p.get("max_hp", self.player.max_hp))
             self.player.inventory = {k: int(v) for k, v in p.get("inventory", {}).items() if int(v) >= 0}
             self.player.torch_uses = p.get("torch_uses")
             self.player.discovered_rooms = set(p.get("discovered_rooms", []))
@@ -55,6 +60,7 @@ class SaveMixin:
                 for tile in p.get("visited_tiles", []):
                     if isinstance(tile, (list, tuple)) and len(tile) == 2:
                         self.player.visited_tiles.add((int(tile[0]), int(tile[1])))
+            self.player.defeated_enemies = set(p.get("defeated_enemies", []))
 
             room_snap = snap.get("rooms", {})
             for room_id, data in room_snap.items():

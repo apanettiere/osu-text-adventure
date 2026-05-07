@@ -78,11 +78,9 @@ class Player:
             "wood": 0, "stone": 0, "food": 0
         }
 
-        # Torch uses remaining (None if not carrying one)
         self.torch_uses: int | None = None
-
-        # Movement penalty when overweight
         self.overweight: bool = False
+        self.defeated_enemies: set[str] = set()
 
     def carry_limit(self, item_registry: dict) -> float:
         base  = 20.0
