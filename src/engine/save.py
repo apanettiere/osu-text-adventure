@@ -13,6 +13,7 @@ class SaveMixin:
                 "loot_hidden": {k: bool(v) for k, v in room.loot_hidden.items()},
             }
         return {
+            "difficulty": getattr(self, "difficulty", "normal"),
             "current_room_id": self.current_room_id,
             "local_x": int(self.local_x),
             "local_y": int(self.local_y),
@@ -39,6 +40,14 @@ class SaveMixin:
             rid = snap.get("current_room_id")
             if rid not in self.rooms:
                 return False
+            from engine.constants import DIFFICULTY_PRESETS, DEFAULT_DIFFICULTY
+            diff = snap.get("difficulty", DEFAULT_DIFFICULTY)
+            if diff not in DIFFICULTY_PRESETS:
+                diff = DEFAULT_DIFFICULTY
+            preset = DIFFICULTY_PRESETS[diff]
+            self.difficulty = diff
+            self.enemy_damage_mult = float(preset["enemy_damage_mult"])
+            self.gather_mult = int(preset["gather_mult"])
             p = snap.get("player", {})
             self.player.hp = int(p.get("hp", self.player.max_hp))
             self.player.max_hp = int(p.get("max_hp", self.player.max_hp))

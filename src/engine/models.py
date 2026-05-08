@@ -65,9 +65,9 @@ class Room:
 
 
 class Player:
-    def __init__(self):
-        self.max_hp = 30
-        self.hp     = 30
+    def __init__(self, max_hp: int = 30):
+        self.max_hp = max_hp
+        self.hp     = max_hp
         self.discovered_rooms: set[str]                  = set()
         self.explored_rooms:   set[str]                  = set()
         self.room_positions:   dict[str, tuple[int,int]] = {}

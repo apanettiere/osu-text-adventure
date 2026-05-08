@@ -149,7 +149,9 @@ class CommandsMixin:
         amount = room.gather_amount(target)
         if amount <= 0:
             return ["You cannot gather that here."]
-        self._add_to_inventory(target, amount)
+        gather_mult = getattr(self, "gather_mult", 1)
+        total = amount * gather_mult
+        self._add_to_inventory(target, total)
         return [f"You gather {target}."]
 
     def handle_take(self, target) -> list[str]:
@@ -468,8 +470,12 @@ class CommandsMixin:
         registry = getattr(self, "item_registry", {})
         carried = self.player.carried_weight(registry)
         limit = self.player.carry_limit(registry)
+        from engine.constants import DIFFICULTY_PRESETS
+        diff = getattr(self, "difficulty", "normal")
+        diff_label = DIFFICULTY_PRESETS.get(diff, {}).get("label", diff.title())
         return [
             f"\nStatus:",
+            f"  Difficulty: {diff_label}",
             f"  Location: {room_name}",
             f"  HP: {self.player.hp}/{self.player.max_hp}",
             f"  Carry weight: {carried:g}/{int(limit)} kg",

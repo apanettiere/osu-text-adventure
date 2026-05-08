@@ -87,7 +87,8 @@ def load_game_state():
             return None
         with SAVE_FILE.open("r", encoding="utf-8") as f:
             payload = json.load(f)
-        state = GameState()
+        difficulty = payload.get("difficulty", "normal")
+        state = GameState(difficulty=difficulty)
         if state.apply_snapshot(payload):
             return state
     except Exception:
@@ -348,6 +349,67 @@ def _finish_after_game_end(screen, clock, state):
         run_defeat_screen(screen, clock)
     clear_game_state()
     return "menu", None
+
+
+def run_difficulty_select(screen, clock):
+    ft = pygame.font.SysFont(None, 46, bold=True)
+    fs = pygame.font.SysFont(None, 28, bold=True)
+    fd = pygame.font.SysFont(None, 22)
+    ff = pygame.font.SysFont(None, 20)
+
+    options = [
+        ("easy",   "Easy",   "More HP, less enemy damage, double gather yields."),
+        ("normal", "Normal", "The intended experience. Balanced combat and resources."),
+        ("hard",   "Hard",   "Less HP, harder hits. Resources stay the same."),
+    ]
+    cy = HEIGHT // 2 - 40
+    btns = []
+    for i, (key, label, desc) in enumerate(options):
+        r = pygame.Rect(0, 0, 320, 52)
+        r.center = (WIDTH // 2, cy + i * 80)
+        btns.append((key, label, desc, r))
+
+    br = pygame.Rect(0, 0, 200, 46)
+    br.center = (WIDTH // 2, cy + len(options) * 80 + 20)
+
+    while True:
+        clock.tick(FPS)
+        mp = pygame.mouse.get_pos()
+        bh = point_in_rect(mp, br)
+
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                return None
+            if ev.type == pygame.KEYDOWN:
+                if ev.key == pygame.K_ESCAPE:
+                    return None
+                if ev.key == pygame.K_1:
+                    return "easy"
+                if ev.key == pygame.K_2:
+                    return "normal"
+                if ev.key == pygame.K_3:
+                    return "hard"
+            if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
+                if bh:
+                    return None
+                for key, _label, _desc, rect in btns:
+                    if point_in_rect(mp, rect):
+                        return key
+
+        screen.fill((14, 14, 14))
+        t = ft.render("SELECT DIFFICULTY", True, (240, 240, 240))
+        screen.blit(t, t.get_rect(center=(WIDTH // 2, 100)))
+
+        for i, (key, label, desc, rect) in enumerate(btns):
+            hovered = point_in_rect(mp, rect)
+            draw_button(screen, rect, label, fs, hovered)
+            dt = fd.render(desc, True, (170, 170, 170))
+            screen.blit(dt, dt.get_rect(center=(WIDTH // 2, rect.bottom + 16)))
+
+        draw_button(screen, br, "Back", fs, bh)
+        foot = ff.render("1 Easy   2 Normal   3 Hard   ESC back", True, (112, 112, 112))
+        screen.blit(foot, foot.get_rect(center=(WIDTH // 2, HEIGHT - 24)))
+        pygame.display.flip()
 
 
 def run_menu(screen, clock):
@@ -2490,7 +2552,7 @@ def _edit_input_line(ev, text: str, cursor_idx: int) -> tuple[bool, str, int]:
 
 
 
-def run_game(screen, clock, state=None):
+def run_game(screen, clock, state=None, difficulty="normal"):
     font    = pygame.font.SysFont(None, 24)
     font_b  = pygame.font.SysFont(None, 24, bold=True)
     font_mt = pygame.font.SysFont(None, 42, bold=True)
@@ -2499,7 +2561,7 @@ def run_game(screen, clock, state=None):
     if state is None:
         state = load_game_state()
     if state is None:
-        state = GameState()
+        state = GameState(difficulty=difficulty)
         log_lines = list(state.get_intro_lines()) + list(state.describe_current_room())
     else:
         log_lines = ["\nSession resumed."] + list(state.describe_current_room())
@@ -2743,9 +2805,12 @@ def main():
             saved_state = None
             continue
         if choice == "start":
+            difficulty = run_difficulty_select(screen, clock)
+            if difficulty is None:
+                continue
             clear_game_state()
             saved_state = None
-            action, saved_state = run_game(screen, clock, None)
+            action, saved_state = run_game(screen, clock, None, difficulty)
             if action == "quit":
                 break
             continue

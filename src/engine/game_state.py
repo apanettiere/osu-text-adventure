@@ -5,6 +5,8 @@ import difflib
 from engine.models import Player
 from engine.loader import load_game_data, build_room_map
 from engine.constants import (
+    DIFFICULTY_PRESETS,
+    DEFAULT_DIFFICULTY,
     DIRECTION_DELTAS,
     ENTRY_SPAWN,
     MAP_ROOM_POS,
@@ -17,8 +19,13 @@ from engine.combat import CombatState
 
 
 class GameState(CommandsMixin, MovementMixin, SaveMixin):
-    def __init__(self):
-        self.player    = Player()
+    def __init__(self, difficulty: str = DEFAULT_DIFFICULTY):
+        preset = DIFFICULTY_PRESETS.get(difficulty, DIFFICULTY_PRESETS[DEFAULT_DIFFICULTY])
+        self.difficulty: str = difficulty
+        self.enemy_damage_mult: float = float(preset["enemy_damage_mult"])
+        self.gather_mult: int = int(preset["gather_mult"])
+
+        self.player    = Player(max_hp=int(preset["player_hp"]))
         self.game_data = load_game_data()
         self.rooms     = build_room_map(self.game_data)
 
@@ -104,7 +111,7 @@ class GameState(CommandsMixin, MovementMixin, SaveMixin):
             enemy_data = self.enemies.get(enemy_id)
             if not enemy_data:
                 continue
-            self.combat = CombatState(enemy_id, enemy_data, self.weapon_damage)
+            self.combat = CombatState(enemy_id, enemy_data, self.weapon_damage, self.enemy_damage_mult)
             return self.combat
         return None
 

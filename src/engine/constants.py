@@ -48,6 +48,29 @@ ENTER_TARGET_ALIASES: dict[str, str] = {
 
 LIGHT_SOURCES = {"lantern", "torch"}
 
+DIFFICULTY_PRESETS = {
+    "easy": {
+        "label": "Easy",
+        "player_hp": 40,
+        "enemy_damage_mult": 0.75,
+        "gather_mult": 2,
+    },
+    "normal": {
+        "label": "Normal",
+        "player_hp": 30,
+        "enemy_damage_mult": 1.0,
+        "gather_mult": 1,
+    },
+    "hard": {
+        "label": "Hard",
+        "player_hp": 20,
+        "enemy_damage_mult": 1.5,
+        "gather_mult": 1,
+    },
+}
+
+DEFAULT_DIFFICULTY = "normal"
+
 
 def encode_visited_tiles(tiles: set[tuple[int, int]]) -> list[list[object]]:
     if not tiles:

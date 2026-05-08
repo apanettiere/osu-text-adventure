@@ -8,14 +8,14 @@ WEAPON_PRIORITY = ["axe", "spear", "knife", "machete"]
 
 class CombatState:
 
-    def __init__(self, enemy_id: str, enemy_data: dict, weapon_damage: dict):
+    def __init__(self, enemy_id: str, enemy_data: dict, weapon_damage: dict, damage_mult: float = 1.0):
         self.enemy_id: str = enemy_id
         self.enemy_name: str = enemy_data.get("name", "an enemy")
         self.enemy_desc: str = enemy_data.get("desc", "")
         self.enemy_symbol: str = enemy_data.get("symbol", "?")
         self.enemy_max_hp: int = int(enemy_data.get("hp", 10))
         self.enemy_hp: int = self.enemy_max_hp
-        self.enemy_damage: int = int(enemy_data.get("damage", 3))
+        self.enemy_damage: int = max(1, int(int(enemy_data.get("damage", 3)) * damage_mult))
         self.weapon_damage: dict = weapon_damage
         self.combat_log: list[str] = []
         self.finished: bool = False
