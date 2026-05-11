@@ -272,6 +272,33 @@ class TestFoodToHealth:
         assert "+5" in eat_lines[0]
         assert "strikes" in attack_lines[0]
 
+    def test_eat_cooldown_blocks_consecutive_eat(self):
+        state = _make_state()
+        state.player.hp = 10
+        state.player.inventory["food"] = 5
+        cs = CombatState("boar", {"name": "boar", "hp": 20, "damage": 1, "symbol": "B"}, {})
+        cs.player_eat(state.player)
+        assert cs.eat_cooldown == 2
+        lines = cs.player_eat(state.player)
+        assert "still recovering" in lines[0]
+
+    def test_eat_cooldown_ticks_on_attack(self):
+        state = _make_state()
+        state.player.hp = 10
+        state.player.inventory["food"] = 5
+        cs = CombatState("boar", {"name": "boar", "hp": 20, "damage": 1, "symbol": "B"}, {})
+        cs.player_eat(state.player)
+        assert cs.eat_cooldown == 2
+        cs.player_attack(state.player.inventory)
+        assert cs.eat_cooldown == 1
+        cs.player_attack(state.player.inventory)
+        assert cs.eat_cooldown == 0
+        assert cs.can_eat()
+
+    def test_can_eat_initially(self):
+        cs = CombatState("boar", {"name": "boar", "hp": 10, "damage": 1, "symbol": "B"}, {})
+        assert cs.can_eat()
+
     def test_status_shows_reduced_hp(self):
         state = _make_state()
         state.player.hp = 15

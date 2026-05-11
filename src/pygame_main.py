@@ -487,9 +487,26 @@ def run_menu(screen, clock):
         pygame.display.flip()
 
 
-def draw_game_screen(screen, font, font_bold, log_lines, input_text, cursor_idx, scroll_offset, cursor_on):
+def draw_game_screen(screen, font, font_bold, log_lines, input_text, cursor_idx, scroll_offset, cursor_on, state=None):
     screen.fill((18,18,18))
-    ol = PADDING; ot = PADDING; ob = HEIGHT - GAME_INPUT_HEIGHT - PADDING
+    hp_bar_h = 0
+    if state:
+        hp_bar_h = 22
+        ratio = max(0, state.player.hp / state.player.max_hp) if state.player.max_hp > 0 else 0
+        bar_w = WIDTH - PADDING * 2
+        bar_x = PADDING
+        bar_y = PADDING
+        pygame.draw.rect(screen, (40, 40, 40), (bar_x, bar_y, bar_w, hp_bar_h - 4), border_radius=4)
+        fill_w = int(bar_w * ratio)
+        if fill_w > 0:
+            r = int(200 * (1 - ratio) + 60 * ratio)
+            g = int(60 * (1 - ratio) + 180 * ratio)
+            b = 50
+            pygame.draw.rect(screen, (r, g, b), (bar_x, bar_y, fill_w, hp_bar_h - 4), border_radius=4)
+        hp_font = pygame.font.SysFont(None, 18)
+        hp_text = hp_font.render(f"{state.player.hp}/{state.player.max_hp} hp", True, (220, 220, 220))
+        screen.blit(hp_text, hp_text.get_rect(center=(bar_x + bar_w // 2, bar_y + (hp_bar_h - 4) // 2)))
+    ol = PADDING; ot = PADDING + hp_bar_h; ob = HEIGHT - GAME_INPUT_HEIGHT - PADDING
     oh = ob - ot
     pygame.draw.rect(screen, (28,28,28), (ol-8, ot-8, WIDTH-PADDING*2+16, oh+16), border_radius=8)
     max_text_w = WIDTH - (PADDING * 3)
@@ -2403,6 +2420,37 @@ ARROW_DIRS = {
 
 
 _combat_fonts = {}
+_combat_anims: dict[str, tuple[int, int, int]] = {}
+COMBAT_ANIM_DURATION = 300
+ENEMY_AUTO_ATTACK_MS = 3000
+
+ENCOUNTER_HINTS = {
+    "feral_boar": "You hear heavy snorting and hooves scraping the dirt ahead...",
+    "snarling_wolf": "A low growl rises from the reeds by the water's edge...",
+    "gaunt_man": "Footsteps echo above you. Someone is descending the stairs...",
+}
+
+
+def _trigger_combat_anim(who: str, dx: int, dy: int):
+    _combat_anims[who] = (pygame.time.get_ticks(), dx, dy)
+
+
+def _combat_anim_offset(who: str) -> tuple[int, int]:
+    anim = _combat_anims.get(who)
+    if not anim:
+        return (0, 0)
+    start, dx, dy = anim
+    elapsed = pygame.time.get_ticks() - start
+    if elapsed >= COMBAT_ANIM_DURATION:
+        del _combat_anims[who]
+        return (0, 0)
+    t = elapsed / COMBAT_ANIM_DURATION
+    if t < 0.3:
+        frac = t / 0.3
+    else:
+        frac = 1.0 - (t - 0.3) / 0.7
+    return (int(dx * frac), int(dy * frac))
+
 
 def _get_combat_fonts():
     if not _combat_fonts:
@@ -2416,7 +2464,7 @@ def _get_combat_fonts():
     return _combat_fonts
 
 
-def draw_combat_screen(screen, state, combat_log, btn_hovered):
+def draw_combat_screen(screen, state, combat_log, btn_hovered, last_enemy_attack_t=0, hp_flash=None):
     combat = state.combat
     if not combat:
         return {}
@@ -2444,21 +2492,38 @@ def draw_combat_screen(screen, state, combat_log, btn_hovered):
     left_x = mid // 2
     right_x = mid + mid // 2
 
+    # HP flash colors
+    now = pygame.time.get_ticks()
+    p_hp_color = (200, 200, 200)
+    e_hp_color = (200, 200, 200)
+    if hp_flash:
+        flash_who, flash_type, flash_t = hp_flash
+        elapsed = now - flash_t
+        if elapsed < 400:
+            if flash_who == "player" and flash_type == "damage":
+                p_hp_color = (220, 60, 60)
+            elif flash_who == "player" and flash_type == "heal":
+                p_hp_color = (60, 200, 80)
+            elif flash_who == "enemy" and flash_type == "damage":
+                e_hp_color = (220, 60, 60)
+
     # Player side
     p_hp_text = f"{state.player.hp}/{state.player.max_hp} hp"
-    p_hp = f_hp.render(p_hp_text, True, (200, 200, 200))
+    p_hp = f_hp.render(p_hp_text, True, p_hp_color)
     screen.blit(p_hp, p_hp.get_rect(center=(left_x, 195)))
 
     p_sym = f_sym.render("@", True, (220, 220, 220))
-    screen.blit(p_sym, p_sym.get_rect(center=(left_x, 260)))
+    p_offset = _combat_anim_offset("player")
+    screen.blit(p_sym, p_sym.get_rect(center=(left_x + p_offset[0], 260 + p_offset[1])))
 
     # Enemy side
     e_hp_text = f"{combat.enemy_hp}/{combat.enemy_max_hp} hp"
-    e_hp = f_hp.render(e_hp_text, True, (200, 200, 200))
+    e_hp = f_hp.render(e_hp_text, True, e_hp_color)
     screen.blit(e_hp, e_hp.get_rect(center=(right_x, 195)))
 
     e_sym = f_sym.render(combat.enemy_symbol, True, (220, 220, 220))
-    screen.blit(e_sym, e_sym.get_rect(center=(right_x, 260)))
+    e_offset = _combat_anim_offset("enemy")
+    screen.blit(e_sym, e_sym.get_rect(center=(right_x + e_offset[0], 260 + e_offset[1])))
 
     # Divider
     pygame.draw.line(screen, (40, 40, 40), (mid, 160), (mid, 310), 1)
@@ -2478,10 +2543,14 @@ def draw_combat_screen(screen, state, combat_log, btn_hovered):
 
     # Eat button (left)
     food_count = state.player.inventory.get("food", 0)
-    eat_text = f"+5 hp (food: {food_count})"
+    can_eat = combat.can_eat()
+    if not can_eat:
+        eat_text = f"eat ({combat.eat_cooldown} turn{'s' if combat.eat_cooldown > 1 else ''})"
+    else:
+        eat_text = f"+5 hp (food: {food_count})"
     eat_rect = pygame.Rect(0, 0, 220, 44)
     eat_rect.center = (left_x, btn_y)
-    eat_enabled = food_count > 0 and state.player.hp < state.player.max_hp
+    eat_enabled = can_eat and food_count > 0 and state.player.hp < state.player.max_hp
     draw_button(screen, eat_rect, eat_text, f_btn, btn_hovered == "eat", eat_enabled)
     buttons["eat"] = (eat_rect, eat_enabled)
 
@@ -2498,6 +2567,21 @@ def draw_combat_screen(screen, state, combat_log, btn_hovered):
     flee_rect.center = (mid, btn_y + 52)
     draw_button(screen, flee_rect, "flee", f_btn, btn_hovered == "flee", True)
     buttons["flee"] = (flee_rect, True)
+
+    # Timer bar showing time until next enemy auto-attack
+    if last_enemy_attack_t > 0:
+        elapsed = now - last_enemy_attack_t
+        frac = max(0.0, 1.0 - elapsed / ENEMY_AUTO_ATTACK_MS)
+        bar_w = 300
+        bar_h = 6
+        bar_x = (WIDTH - bar_w) // 2
+        bar_y = flee_rect.bottom + 12
+        pygame.draw.rect(screen, (35, 35, 35), (bar_x, bar_y, bar_w, bar_h), border_radius=3)
+        r = int(180 * (1.0 - frac) + 60 * frac)
+        g = int(60 * (1.0 - frac) + 160 * frac)
+        fill_w = max(0, int(bar_w * frac))
+        if fill_w > 0:
+            pygame.draw.rect(screen, (r, g, 60), (bar_x, bar_y, fill_w, bar_h), border_radius=3)
 
     hint = f_hint.render("A attack    E eat    F flee", True, (65, 65, 65))
     screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 16)))
@@ -2578,6 +2662,8 @@ def run_game(screen, clock, state=None, difficulty="normal"):
     combat_log    = []
     combat_btn_hovered = ""
     combat_buttons = {}
+    last_enemy_attack_t = 0
+    hp_flash = None
 
     while True:
         clock.tick(FPS)
@@ -2597,8 +2683,15 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                     return "menu", state
                 if mode == "combat":
                     if ev.key == pygame.K_a:
+                        _trigger_combat_anim("player", 30, 0)
+                        hp_flash = ("enemy", "damage", pygame.time.get_ticks())
                         combat_log.extend(state.combat.player_attack(state.player.inventory))
+                        prev_hp = state.player.hp
                         combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.player.hp < prev_hp:
+                            hp_flash = ("player", "damage", pygame.time.get_ticks())
+                        _trigger_combat_anim("enemy", -15, 0)
+                        last_enemy_attack_t = pygame.time.get_ticks()
                         if state.combat.finished:
                             state.finish_combat()
                             if not state.is_running:
@@ -2607,8 +2700,15 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                             log_lines.append("The threat is gone. You steady yourself.")
                             save_game_state(state)
                     elif ev.key == pygame.K_e:
+                        prev_hp = state.player.hp
                         combat_log.extend(state.combat.player_eat(state.player))
+                        if state.player.hp > prev_hp:
+                            hp_flash = ("player", "heal", pygame.time.get_ticks())
                         combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.player.hp < prev_hp:
+                            hp_flash = ("player", "damage", pygame.time.get_ticks())
+                        _trigger_combat_anim("enemy", -15, 0)
+                        last_enemy_attack_t = pygame.time.get_ticks()
                         if state.combat.finished:
                             state.finish_combat()
                             if not state.is_running:
@@ -2616,6 +2716,8 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                             mode = "game"
                             save_game_state(state)
                     elif ev.key == pygame.K_f:
+                        _trigger_combat_anim("enemy", -20, 0)
+                        hp_flash = ("player", "damage", pygame.time.get_ticks())
                         combat_log.extend(state.combat.player_flee(state.player))
                         state.finish_combat()
                         if not state.is_running:
@@ -2681,8 +2783,13 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                         save_game_state(state)
                         log_lines = clamp_log(log_lines)
                         if room_changed and state.check_encounter():
+                            hint = ENCOUNTER_HINTS.get(state.combat.enemy_id, "")
+                            if hint:
+                                log_lines.append(hint)
+                                log_lines = clamp_log(log_lines)
                             mode = "combat"
                             combat_log = []
+                            last_enemy_attack_t = pygame.time.get_ticks()
                         continue
 
                     if ev.key == pygame.K_RETURN:
@@ -2704,8 +2811,13 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                             save_game_state(state)
                             log_lines = clamp_log(log_lines)
                             if room_changed and state.check_encounter():
+                                hint = ENCOUNTER_HINTS.get(state.combat.enemy_id, "")
+                                if hint:
+                                    log_lines.append(hint)
+                                    log_lines = clamp_log(log_lines)
                                 mode = "combat"
                                 combat_log = []
+                                last_enemy_attack_t = pygame.time.get_ticks()
                         continue
 
                     edited, input_text, cursor_idx = _edit_input_line(ev, input_text, cursor_idx)
@@ -2720,8 +2832,15 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                             action = btn_name
                             break
                     if action == "attack":
+                        _trigger_combat_anim("player", 30, 0)
+                        hp_flash = ("enemy", "damage", pygame.time.get_ticks())
                         combat_log.extend(state.combat.player_attack(state.player.inventory))
+                        prev_hp = state.player.hp
                         combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.player.hp < prev_hp:
+                            hp_flash = ("player", "damage", pygame.time.get_ticks())
+                        _trigger_combat_anim("enemy", -15, 0)
+                        last_enemy_attack_t = pygame.time.get_ticks()
                         if state.combat.finished:
                             state.finish_combat()
                             if not state.is_running:
@@ -2730,8 +2849,15 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                             log_lines.append("The threat is gone. You steady yourself.")
                             save_game_state(state)
                     elif action == "eat":
+                        prev_hp = state.player.hp
                         combat_log.extend(state.combat.player_eat(state.player))
+                        if state.player.hp > prev_hp:
+                            hp_flash = ("player", "heal", pygame.time.get_ticks())
                         combat_log.extend(state.combat.enemy_attack(state.player))
+                        if state.player.hp < prev_hp:
+                            hp_flash = ("player", "damage", pygame.time.get_ticks())
+                        _trigger_combat_anim("enemy", -15, 0)
+                        last_enemy_attack_t = pygame.time.get_ticks()
                         if state.combat.finished:
                             state.finish_combat()
                             if not state.is_running:
@@ -2739,6 +2865,8 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                             mode = "game"
                             save_game_state(state)
                     elif action == "flee":
+                        _trigger_combat_anim("enemy", -20, 0)
+                        hp_flash = ("player", "damage", pygame.time.get_ticks())
                         combat_log.extend(state.combat.player_flee(state.player))
                         state.finish_combat()
                         if not state.is_running:
@@ -2775,14 +2903,28 @@ def run_game(screen, clock, state=None, difficulty="normal"):
                     combat_btn_hovered = btn_name
                     break
 
+        if mode == "combat" and state.combat and not state.combat.finished:
+            now = pygame.time.get_ticks()
+            if now - last_enemy_attack_t >= ENEMY_AUTO_ATTACK_MS:
+                _trigger_combat_anim("enemy", -20, 0)
+                combat_log.extend(state.combat.enemy_attack(state.player))
+                hp_flash = ("player", "damage", now)
+                last_enemy_attack_t = now
+                if state.combat.finished:
+                    state.finish_combat()
+                    if not state.is_running:
+                        return _finish_after_game_end(screen, clock, state)
+                    mode = "game"
+                    save_game_state(state)
+
         if mode == "combat":
-            combat_buttons = draw_combat_screen(screen, state, combat_log, combat_btn_hovered)
+            combat_buttons = draw_combat_screen(screen, state, combat_log, combat_btn_hovered, last_enemy_attack_t, hp_flash)
         elif mode == "inventory":
             inv_selected = draw_inventory_screen(screen, state, inv_selected, inv_detail, inv_flash)
         elif mode == "map":
             draw_map_screen(screen, font_mt, font_mb, font, state, input_text, cursor_idx, cursor_on, last_cmd, last_response)
         else:
-            draw_game_screen(screen, font, font_b, log_lines, input_text, cursor_idx, scroll, cursor_on)
+            draw_game_screen(screen, font, font_b, log_lines, input_text, cursor_idx, scroll, cursor_on, state)
         pygame.display.flip()
 
     return "menu", state

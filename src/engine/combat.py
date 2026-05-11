@@ -21,6 +21,7 @@ class CombatState:
         self.finished: bool = False
         self.player_won: bool = False
         self.player_fled: bool = False
+        self.eat_cooldown: int = 0
 
     def best_weapon(self, inventory: dict) -> tuple[str | None, int]:
         for weapon in WEAPON_PRIORITY:
@@ -32,6 +33,8 @@ class CombatState:
     def player_attack(self, inventory: dict) -> list[str]:
         weapon, dmg = self.best_weapon(inventory)
         self.enemy_hp = max(0, self.enemy_hp - dmg)
+        if self.eat_cooldown > 0:
+            self.eat_cooldown -= 1
         if weapon:
             lines = [f"you strike with the {weapon} for {dmg} damage."]
         else:
@@ -53,13 +56,19 @@ class CombatState:
             self.player_won = False
         return lines
 
+    def can_eat(self) -> bool:
+        return self.eat_cooldown <= 0
+
     def player_eat(self, player) -> list[str]:
+        if self.eat_cooldown > 0:
+            return [f"still recovering. eat ready in {self.eat_cooldown} turn{'s' if self.eat_cooldown > 1 else ''}."]
         food = player.inventory.get("food", 0)
         if food <= 0:
             return ["no food left."]
         player.inventory["food"] -= 1
         healed = min(5, player.max_hp - player.hp)
         player.hp = min(player.max_hp, player.hp + 5)
+        self.eat_cooldown = 2
         if healed > 0:
             return [f"+{healed} hp. (food: {player.inventory.get('food', 0)})"]
         return [f"already full. (food: {player.inventory.get('food', 0)})"]
