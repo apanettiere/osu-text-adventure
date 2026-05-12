@@ -902,20 +902,20 @@ RIVER_PATH_MAIN = [
     (15, 39),
     (12, 35),
     (10, 31),
-    (8, 27),
-    (7, 24),
-    (6, 22),
+    (8, 29),
+    (4, 30),
+    (0, 33),
+    (-4, 36),
 ]
 
 RIVER_PATH_LAKE_BRANCH = [
     (26, 45),
-    (30, 43),
-    (34, 40),
-    (39, 37),
-    (43, 35),
-    (47, 33),
-    (50, 32),
-    (53, 31),
+    (28, 43),
+    (30, 41),
+    (32, 39),
+    (34, 37),
+    (35, 34),
+    (35, 31),
 ]
 
 RAFT_CROSSING_TILES = {
@@ -924,7 +924,7 @@ RAFT_CROSSING_TILES = {
 }
 
 RAFT_ROUTE_TILES = {
-    (26, 45), (30, 43), (34, 40), (39, 37), (43, 35), (47, 33), (50, 32), (53, 31),
+    (26, 45), (28, 43), (30, 41), (32, 39), (34, 37), (35, 34), (35, 31),
 }
 
 RAFT_OCEAN_SPRITE_ANCHOR = (1, 24)
@@ -1021,8 +1021,8 @@ def _compute_default_map_origin() -> tuple[int, int]:
     include(20, 55)
 
     # Lake envelope.
-    include(45, 24)
-    include(63, 39)
+    include(27, 24)
+    include(45, 39)
 
     for cx, cy, rx, ry in ISLAND_PATCHES:
         include(cx - rx - 3, cy - ry - 3)
@@ -1075,7 +1075,7 @@ def _build_river_samples(path):
     for idx, ((x0, y0), (x1, y1)) in enumerate(zip(path, path[1:])):
         steps = max(abs(x1 - x0), abs(y1 - y0)) * 2
         steps = max(steps, 1)
-        width = 2.2 + (idx / max(seg_count - 1, 1)) * 1.0
+        width = 2.8 + (idx / max(seg_count - 1, 1)) * 1.4
         dx = x1 - x0
         dy = y1 - y0
         mag = max((dx * dx + dy * dy) ** 0.5, 0.001)
@@ -1224,13 +1224,13 @@ def _is_river_tile(wcol, wrow):
 def _is_lake_tile(wcol, wrow):
     if _in_room_shape(wcol, wrow):
         return False
-    cx1, cy1 = 54.2, 31.6
+    cx1, cy1 = 36.2, 31.6
     rx1, ry1 = 9.8, 6.6
     d1 = ((wcol - cx1) / rx1) ** 2 + ((wrow - cy1) / ry1) ** 2
-    cx2, cy2 = 60.0, 30.2
+    cx2, cy2 = 42.0, 30.2
     rx2, ry2 = 5.8, 4.4
     d2 = ((wcol - cx2) / rx2) ** 2 + ((wrow - cy2) / ry2) ** 2
-    cx3, cy3 = 49.8, 33.8
+    cx3, cy3 = 31.8, 33.8
     rx3, ry3 = 5.2, 3.8
     d3 = ((wcol - cx3) / rx3) ** 2 + ((wrow - cy3) / ry3) ** 2
     return d1 <= 1.0 or d2 <= 1.0 or d3 <= 1.0

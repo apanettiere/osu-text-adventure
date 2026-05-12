@@ -8,6 +8,10 @@ from engine.constants import (
     LIGHT_SOURCES,
 )
 
+WATER_ROOMS = {"river_run", "river_lake", "far_shore", "open_waters"}
+WATER_STEP_SIZE = 2
+OPEN_WATER_STEP_SIZE = 3
+
 
 class MovementMixin:
 
@@ -37,8 +41,13 @@ class MovementMixin:
 
     def _step_local(self, direction: str, room) -> str | None:
         dx, dy = DIRECTION_DELTAS[direction]
-        self.local_x = max(0, min(room.width  - 1, self.local_x + dx))
-        self.local_y = max(0, min(room.height - 1, self.local_y + dy))
+        step = 1
+        if getattr(room, "id", None) in WATER_ROOMS:
+            has_raft = self.player.inventory.get("raft", 0) > 0
+            if has_raft:
+                step = OPEN_WATER_STEP_SIZE if room.id == "open_waters" else WATER_STEP_SIZE
+        self.local_x = max(0, min(room.width  - 1, self.local_x + dx * step))
+        self.local_y = max(0, min(room.height - 1, self.local_y + dy * step))
         self._mark_visited()
         nearby_lines: list[str] = []
         registry = getattr(self, "item_registry", {})
@@ -202,8 +211,11 @@ class MovementMixin:
                 carried = self.player.carried_weight(registry)
                 limit   = self.player.carry_limit(registry)
                 lines   = []
+                in_water = getattr(room, "id", None) in WATER_ROOMS
                 if carried >= limit:
                     lines.append("You strain under the weight but drag yourself forward.")
+                elif in_water and self.player.inventory.get("raft", 0) > 0:
+                    lines.append(f"You paddle {target}.")
                 else:
                     lines.append(f"You move {target}.")
                 if flavour:
@@ -228,19 +240,6 @@ class MovementMixin:
 
         dest_room = self.rooms.get(next_room_id)
 
-        WATER_ROOMS = {"river_run", "river_lake", "far_shore", "open_waters"}
-
-        water_to_pass = (
-            next_room_id == "mountain_pass"
-            and self.current_room_id in WATER_ROOMS
-        )
-        if water_to_pass:
-            has_raft = self.player.inventory.get("raft", 0) > 0
-            has_gear = self.player.inventory.get("climbing_gear", 0) > 0
-            if not has_raft and not has_gear:
-                self.player.discovered_rooms.add(next_room_id)
-                return ["The bay current is too deep and rough here. You need the raft to head west."]
-
         entering_water_from_land = (
             next_room_id in WATER_ROOMS
             and self.current_room_id not in WATER_ROOMS
@@ -251,7 +250,7 @@ class MovementMixin:
                 self.player.discovered_rooms.add(next_room_id)
                 return ["The water runs fast and deep. You need the raft to cross."]
 
-        blocked = None if water_to_pass else self._requirement_block_message(dest_room)
+        blocked = self._requirement_block_message(dest_room)
         if blocked:
             self.player.discovered_rooms.add(next_room_id)
             return [blocked]
@@ -276,4 +275,13 @@ class MovementMixin:
         else:
             self.local_x, self.local_y = ENTRY_SPAWN[target](dest.width, dest.height)
         self._mark_visited()
-        return self.describe_current_room()
+
+        on_water = (
+            source_room_id in WATER_ROOMS
+            or next_room_id in WATER_ROOMS
+        )
+        has_raft = self.player.inventory.get("raft", 0) > 0
+        lines = self.describe_current_room()
+        if on_water and has_raft:
+            lines.insert(0, f"You paddle {target} into the {dest.name.lower()}.")
+        return lines

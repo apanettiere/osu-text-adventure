@@ -386,10 +386,11 @@
       "id": "river_run",
       "name": "River Run",
       "description": "You enter a fast river run between cut banks and slick stone. The current drives west toward salt spray and open water.",
-      "description_with_raft": "The raft rides the current cleanly here. East returns to the riverbank launch and west pushes toward the bay mouth.",
+      "description_with_raft": "The raft rides the current cleanly here. East returns to the riverbank launch and west pushes out into open waters.",
       "exits": {
+        "north": "mountain_pass",
         "east": "riverbank",
-        "west": "mountain_pass"
+        "west": "open_waters"
       },
       "gather": {
         "food": 1
@@ -778,7 +779,8 @@
       "name": "Far Shore",
       "description": "You drag the raft onto a muddy bank overgrown with reeds. The air smells of salt and rotting wood. Driftwood is piled against a fallen trunk. Scattered islands rise from the open waters to the west.",
       "exits": {
-        "north": "river_lake",
+        "north": "riverbank",
+        "east": "river_lake",
         "west": "open_waters"
       },
       "gather": {
@@ -831,10 +833,10 @@
     {
       "id": "open_waters",
       "name": "Open Waters",
-      "description": "Wind-swept ocean stretches out before you. Waves roll across dark water under a grey sky. Scattered islands rise from the shallows, some ringed with sandy beaches, others thick with low scrub. Driftwood and broken coral line the shore edges. The lighthouse cliff rises to the east, and a muddy far shore lies to the south.",
+      "description": "Wind-swept ocean stretches out before you. Waves roll across dark water under a grey sky. Scattered islands rise from the shallows, some ringed with sandy beaches, others thick with low scrub. Driftwood and broken coral line the shore edges. The river mouth lies to the east, and a muddy far shore to the south.",
       "description_with_shovel": "You can see the marked stone on the southern island from here. The shovel should make short work of whatever is buried there.",
       "exits": {
-        "east": "mountain_pass",
+        "east": "river_run",
         "south": "far_shore"
       },
       "gather": {
@@ -916,10 +918,10 @@
     {
       "id": "mountain_pass",
       "name": "Mountain Pass",
-      "description": "You climb onto a broad cliff shelf of weathered grey stone. Sea spray hangs in the air. The lighthouse rises from a narrow crown of rock with water on three sides, white tower cut against the dark sky. Its heavy door stands half open.",
+      "description": "You climb onto a broad cliff shelf of weathered grey stone. Sea spray hangs in the air. The lighthouse rises from a narrow crown of rock with water on three sides, white tower cut against the dark sky. Its heavy door stands half open. The river runs below to the south.",
       "exits": {
         "east": "clearing",
-        "west": "open_waters"
+        "south": "river_run"
       },
       "gather": {
         "stone": 1
@@ -985,9 +987,10 @@
     {
       "id": "lighthouse_interior",
       "name": "Lighthouse Interior",
-      "description": "You step into the lighthouse and pull the door shut against the wind. Damp stone walls rise in a tall cylinder around you. A spiral iron stair circles upward toward the lantern room, with old equipment bolted to the lower walls.",
+      "description": "You step into the lighthouse and pull the door shut against the wind. Damp stone walls rise in a tall cylinder around you. A spiral iron stair circles upward toward the lantern room, with old equipment bolted to the lower walls. The door leads back outside to the south.",
       "exits": {
-        "south": "mountain_pass"
+        "south": "mountain_pass",
+        "north": "lighthouse_top"
       },
       "gather": {},
       "actions": [
@@ -1054,7 +1057,7 @@
     {
       "id": "lighthouse_top",
       "name": "Lantern Room",
-      "description": "You emerge into a wide lantern room ringed by thick glass panes. Rain spatters the windows while waves break far below. A cold brazier sits beneath the giant lens, and the shutter controls are still connected.",
+      "description": "You emerge into a wide lantern room ringed by thick glass panes. Rain spatters the windows while waves break far below. A cold brazier sits beneath the giant lens, and the shutter controls are still connected. The spiral stairs lead back down.",
       "description_with_lantern": "Lantern light glints off brass gears and glass. Every part of the beacon is visible now: the brazier, lens track, shutter crank, and the signal lever beside the catwalk hatch.",
       "exits": {
         "south": "lighthouse_interior"

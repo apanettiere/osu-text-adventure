@@ -403,12 +403,12 @@ class TestPuzzleFlows:
         gs.process_command("go", "west")
         assert gs.current_room_id == "river_run"
 
-    def test_river_run_west_to_mountain_pass_with_raft(self, gs):
+    def test_river_run_west_to_open_waters_with_raft(self, gs):
         gs.player.inventory["raft"] = 1
         teleport(gs, "river_run")
         at_edge(gs, "west")
         gs.process_command("go", "west")
-        assert gs.current_room_id == "mountain_pass"
+        assert gs.current_room_id == "open_waters"
 
     def test_raft_found_in_cabin(self, gs):
         teleport(gs, "thick_forest")
